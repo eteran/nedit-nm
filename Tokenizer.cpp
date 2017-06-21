@@ -29,6 +29,9 @@ Tokenizer::Tokenizer(const std::string &filename) {
     using std::isxdigit;
 
 	std::ifstream file(filename);
+	if(!file) {
+		throw FileNotFound(filename);
+	}
 
 	auto  source = std::string(std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{});
     Input input(filename, std::move(source));

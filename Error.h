@@ -13,6 +13,24 @@ public:
     const char *what() const noexcept override = 0;
 };
 
+class FileNotFound : public Error {
+public:
+    explicit FileNotFound(const std::string &filename) : filename_(filename) {
+    }
+
+public:
+    const char *what() const noexcept override {
+		return "FileNotFound";
+	}
+	
+	const std::string &filename() const {
+		return filename_;
+	}
+	
+private:
+	const std::string filename_;
+};
+
 class SyntaxError : public Error {
 public:
     explicit SyntaxError(const Token &token) : token_(token) {
