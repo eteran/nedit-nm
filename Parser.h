@@ -55,7 +55,7 @@ public:
 	Token readToken();
     void ungetToken();
     size_t tokenIndex() const;
-    void setTokenIndex(size_t tokenIndex);
+    void setTokenIndex(size_t index);
 
 private:
     Tokenizer          tokenizer_;

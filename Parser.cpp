@@ -86,9 +86,7 @@ std::unique_ptr<Statement> Parser::parseForStatement() {
     Token semi1 = peekToken();
     if(semi1.type == Token::Semicolon) {
         // standard C-style FOR loop
-        if (semi1.type != Token::Semicolon) {
-            throw MissingSemicolon(semi1);
-        }
+
 
         // consume the semicolon now that we are sure
         semi1 = readToken();

@@ -4,11 +4,6 @@
 #include <iostream>
 #include <map>
 
-namespace {
-
-std::vector<std::unique_ptr<Statement>> statements;
-
-}
 
 /**
  * @brief main
@@ -22,6 +17,9 @@ int main(int argc, char *argv[]) {
 	}
 
     try {
+
+        std::vector<std::unique_ptr<Statement>> statements;
+
 		Parser parser(argv[1]);
 
 		while (true) {

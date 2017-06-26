@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.0)
 
 project(nm CXX)
 
-set(SOURCES
+set(nm_SOURCES
 	Error.cpp
 	Error.h
 	Expression.h
@@ -19,7 +19,7 @@ set(SOURCES
 	Tokenizer.h
 )
 
-add_executable(nm ${SOURCES})
+add_executable(nm ${nm_SOURCES})
 
 set_property(TARGET nm PROPERTY CXX_STANDARD 14)
 
