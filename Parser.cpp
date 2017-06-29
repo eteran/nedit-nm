@@ -74,6 +74,11 @@ void Parser::setTokenIndex(size_t index) {
  */
 std::unique_ptr<Statement> Parser::parseForStatement() {
 
+    auto forToken = readToken();
+    if(forToken.type != Token::For) {
+        throw SyntaxError(forToken);
+    }
+
     // TODO(eteran): support commas in init/incr portions
 
     Token openParen = readToken();
@@ -169,6 +174,11 @@ std::unique_ptr<Statement> Parser::parseForStatement() {
  */
 std::unique_ptr<CondStatement> Parser::parseIfStatement() {
 
+    auto ifToken = readToken();
+    if(ifToken.type != Token::If) {
+        throw SyntaxError(ifToken);
+    }
+
     Token openParen = readToken();
     if (openParen.type != Token::LeftParen) {
         throw MissingOpenParen(openParen);
@@ -200,13 +210,62 @@ std::unique_ptr<CondStatement> Parser::parseIfStatement() {
 
 	if (peekToken().type == Token::Else) {
 		readToken();
+
+        // consume any newlines
+        while(peekToken().type == Token::Newline) {
+            readToken();
+        }
+
 		cond->else_ = parseStatement();
 	}
 
 	return cond;
 }
 
+/**
+ * @brief parseBreakStatement
+ * @return
+ */
+std::unique_ptr<BreakStatement> Parser::parseBreakStatement() {
+    Token breakToken = readToken();
+    if(breakToken.type != Token::Break) {
+        throw SyntaxError(breakToken);
+    }
+
+    Token nl = readToken();
+    if (nl.type != Token::Newline) {
+        throw MissingNewline(nl);
+    }
+    return std::make_unique<BreakStatement>();
+}
+
+/**
+ * @brief parseContinueStatement
+ * @return
+ */
+std::unique_ptr<ContinueStatement> Parser::parseContinueStatement() {
+    Token cont = readToken();
+    if(cont.type != Token::Continue) {
+        throw SyntaxError(cont);
+    }
+
+    Token nl = readToken();
+    if (nl.type != Token::Newline) {
+        throw MissingNewline(nl);
+    }
+    return std::make_unique<ContinueStatement>();
+}
+
+/**
+ * @brief Parser::parseDeleteStatement
+ * @return
+ */
 std::unique_ptr<DeleteStatement> Parser::parseDeleteStatement() {
+
+    auto delToken = readToken();
+    if(delToken.type != Token::Delete) {
+        throw SyntaxError(delToken);
+    }
 
     auto expr = parseExpression();
 
@@ -228,6 +287,11 @@ std::unique_ptr<DeleteStatement> Parser::parseDeleteStatement() {
  * @return
  */
 std::unique_ptr<ReturnStatement> Parser::parseReturnStatement() {
+
+    auto retToken = readToken();
+    if(retToken.type != Token::Return) {
+        throw SyntaxError(retToken);
+    }
 
     auto expr = parseExpression();
     auto ret  = std::make_unique<ReturnStatement>();
@@ -251,10 +315,36 @@ std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
             throw MissingNewline(nl);
 		}
 
+        // consume any newlines
+        while(peekToken().type == Token::Newline) {
+            readToken();
+        }
+
+
 		return statement;
 	}
 
 	return nullptr;
+}
+
+/**
+ * @brief Parser::parseEmptyStatement
+ * @return
+ */
+std::unique_ptr<ExpressionStatement> Parser::parseEmptyStatement() {
+    // empty expression
+
+    Token nl = readToken();
+    if (nl.type != Token::Newline) {
+        throw MissingNewline(nl);
+    }
+
+    // consume any newlines
+    while(peekToken().type == Token::Newline) {
+        readToken();
+    }
+
+    return std::make_unique<ExpressionStatement>();
 }
 
 /**
@@ -275,6 +365,11 @@ std::unique_ptr<Expression> Parser::parseExpression() {
  * @return
  */
 std::unique_ptr<LoopStatement> Parser::parseWhileStatement() {
+
+    auto whileToken = readToken();
+    if(whileToken.type != Token::While) {
+        throw SyntaxError(whileToken);
+    }
 
     Token openParen = readToken();
     if (openParen.type != Token::LeftParen) {
@@ -333,7 +428,12 @@ std::unique_ptr<BlockStatement> Parser::parseBlockStatement() {
  * @brief Parser::parseFunction
  * @return
  */
-std::unique_ptr<CallStatement> Parser::parseCallStatement() {
+std::unique_ptr<FunctionStatement> Parser::parseFunctionStatement() {
+
+    auto defToken = readToken();
+    if(defToken.type != Token::Define) {
+        throw SyntaxError(defToken);
+    }
 
     if(in_function_) {
         throw FunctionDefinedWithinFunction(peekToken());
@@ -352,7 +452,7 @@ std::unique_ptr<CallStatement> Parser::parseCallStatement() {
     }
 
     std::unique_ptr<BlockStatement> body = parseBlockStatement();
-    auto function = std::make_unique<CallStatement>();
+    auto function = std::make_unique<FunctionStatement>();
 
     function->name       = name.value;
     function->statements = std::move(body->statements);
@@ -372,36 +472,25 @@ std::unique_ptr<Statement> Parser::parseStatement() {
 
 	switch (token.type) {
 	default:
-		assert(0);
+        throw UnexpectedKeyword(token);
     case Token::Delete:
-        token = readToken();
         return parseDeleteStatement();
     case Token::Return:
-        token = readToken();
         return parseReturnStatement();
 	case Token::LeftBrace:
 		return parseBlockStatement();
 	case Token::While:
-		token = readToken();
 		return parseWhileStatement();
 	case Token::For:
-		token = readToken();
 		return parseForStatement();
 	case Token::If:
-		token = readToken();
 		return parseIfStatement();
 	case Token::Identifier:
-		return parseExpressionStatement();
     case Token::Increment:
     case Token::Decrement:
         return parseExpressionStatement();
     case Token::Newline:
-        // empty expression
-        token = readToken();
-        return std::make_unique<ExpressionStatement>();
-    case Token::Else:
-    case Token::In:
-        throw UnexpectedKeyword(token);
+        return parseEmptyStatement();
 	case Token::RightParen:
 	case Token::LeftParen:
         throw UnexpectedParen(token);
@@ -411,25 +500,12 @@ std::unique_ptr<Statement> Parser::parseStatement() {
         throw UnexpectedBracket(token);
 	case Token::String:
         throw UnexpectedStringConstant(token);
-    case Token::Break:{
-        Token brk  = readToken();
-        Token nl = readToken();
-        if (nl.type != Token::Newline) {
-            throw MissingNewline(nl);
-		}
-        return std::make_unique<BreakStatement>();
-    }
-    case Token::Continue: {
-        Token cont = readToken();
-        Token nl = readToken();
-        if (nl.type != Token::Newline) {
-            throw MissingNewline(nl);
-        }
-        return std::make_unique<ContinueStatement>();
-    }
+    case Token::Break:
+        return parseBreakStatement();
+    case Token::Continue:
+        return parseContinueStatement();
 	case Token::Define:
-        token = readToken();
-        return parseCallStatement();
+        return parseFunctionStatement();
 	case Token::Invalid:
 		// no more tokens
 		return nullptr;
@@ -442,36 +518,31 @@ std::unique_ptr<Statement> Parser::parseStatement() {
  */
 void Parser::parseExpression0(std::unique_ptr<Expression> &exp) {
 
-	Token identifier = peekToken();
+    // =, +=, -=. *=, /=, %=
 
-	// =, +=, -=, *=, /=, %=, &=, |=
-	if (identifier.type == Token::Identifier) {
+    parseExpression1(exp);
 
-        size_t currentIndex = tokenIndex();
+    Token op = peekToken();
 
-        // TODO(eteran): support array index assignment
-        auto lhs = std::make_unique<Expression>();
-        parseExpression1(lhs);
+    if (op.type == Token::Assign || op.type == Token::AddAssign || op.type == Token::SubAssign || op.type == Token::MulAssign || op.type == Token::DivAssign || op.type == Token::ModAssign) {
 
-		Token op = peekToken();
+        op = readToken();
 
-		if (op.type == Token::Assign || op.type == Token::AddAssign || op.type == Token::SubAssign || op.type == Token::MulAssign || op.type == Token::DivAssign || op.type == Token::ModAssign) {
-			op = readToken();
+        BinaryExpression bin;
 
-			BinaryExpression bin;
+        bin.lhs = std::make_unique<Expression>();
+        bin.op  = op.type;
+        bin.rhs = std::make_unique<Expression>();
 
-            bin.lhs = std::move(lhs);
-			bin.op  = op.type;
-            bin.rhs = std::make_unique<Expression>();
+        // upgrade the expression we have already to being an LHS value
+        *bin.lhs = std::move(*exp);
 
-			parseExpression0(bin.rhs);
-            *exp = std::move(bin);
-		} else {
-            setTokenIndex(currentIndex);
-		}
-	}
+        // parse the RHS expression
+        parseExpression0(bin.rhs);
 
-	parseExpression1(exp);
+        *exp = std::move(bin);
+        op   = peekToken();
+    }
 }
 
 /**
@@ -480,7 +551,7 @@ void Parser::parseExpression0(std::unique_ptr<Expression> &exp) {
  */
 void Parser::parseExpression1(std::unique_ptr<Expression> &exp) {
 
-	// (concatenation)
+    // (concatenation)
 	// NOTE(eteran): this "operator when there is no operator" is a very poor
 	// design choice IMO and requires a bit of hackyness to do correctly :-(
 	// would have been much better if they did something like: "hello " . "world"

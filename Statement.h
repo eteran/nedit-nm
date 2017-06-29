@@ -18,7 +18,7 @@ public:
     std::unique_ptr<Expression> index;
 };
 
-class CallStatement : public Statement {
+class FunctionStatement : public Statement {
 public:
     std::string name;
     std::vector<std::unique_ptr<Statement>> statements;

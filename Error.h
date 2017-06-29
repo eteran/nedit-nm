@@ -37,7 +37,9 @@ public:
     }
 
 public:
-    const char *what() const noexcept override = 0;
+    const char *what() const noexcept override {
+        return "SyntaxError";
+    }
 
 public:
     size_t line() const { return token_.context.line(); }

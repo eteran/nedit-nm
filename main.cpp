@@ -17,7 +17,6 @@ int main(int argc, char *argv[]) {
 	}
 
     try {
-
         std::vector<std::unique_ptr<Statement>> statements;
 
 		Parser parser(argv[1]);
@@ -30,6 +29,22 @@ int main(int argc, char *argv[]) {
 
             statements.push_back(std::move(statement));
         }
+
+#if 1
+        auto it = std::remove_if(statements.begin(), statements.end(), [](const std::unique_ptr<Statement> &stmt) {
+            if(auto expr = dynamic_cast<ExpressionStatement*>(stmt.get())) {
+                if(!expr->expression) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        statements.erase(it, statements.end());
+#endif
+
+        return 0;
     } catch(const SyntaxError &ex) {
         std::cerr << ex.what() << std::endl;
         std::cerr << "On line:   " << ex.line() << std::endl;
@@ -46,6 +61,8 @@ int main(int argc, char *argv[]) {
         std::cerr << "Filename:   " << ex.filename() << std::endl;
         return -1;	
 	}
+
+
 }
 
 

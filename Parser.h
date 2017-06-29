@@ -18,6 +18,7 @@ public:
 	~Parser() = default;
 
 public:
+    std::unique_ptr<ExpressionStatement>     parseEmptyStatement();
     std::unique_ptr<Statement>               parseStatement();
     std::unique_ptr<LoopStatement>           parseWhileStatement();
     std::unique_ptr<Statement>               parseForStatement();
@@ -26,8 +27,10 @@ public:
     std::unique_ptr<ExpressionStatement>     parseExpressionStatement();
     std::unique_ptr<ReturnStatement>         parseReturnStatement();
     std::unique_ptr<Expression>              parseExpression();
-    std::unique_ptr<CallStatement>           parseCallStatement();
+    std::unique_ptr<FunctionStatement>       parseFunctionStatement();
     std::unique_ptr<DeleteStatement>         parseDeleteStatement();
+    std::unique_ptr<BreakStatement>          parseBreakStatement();
+    std::unique_ptr<ContinueStatement>       parseContinueStatement();
     std::vector<std::unique_ptr<Expression>> parseExpressionList();
 
 private:
