@@ -14,8 +14,8 @@ public:
 	bool eof() const;
 	char peek() const;
 	char read();
-    void consume(const std::string &chars);
-    bool match(char ch);
+	void consume(const std::string &chars);
+	bool match(char ch);
 	bool match(const std::string &s);
 	bool match(const std::regex &regex, std::string *match);
 	size_t index() const;

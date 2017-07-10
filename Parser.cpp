@@ -5,11 +5,11 @@
 #include "Input.h"
 #include "Statement.h"
 #include "Tokenizer.h"
+#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <cassert>
 
 /**
  * @brief Parser::Parser
@@ -44,128 +44,77 @@ Token Parser::readToken() {
 }
 
 /**
- * @brief Parser::ungetToken
- */
-void Parser::ungetToken() {
-	if (index_ > 0) {
-		--index_;
-	}
-}
-
-/**
- * @brief Parser::tokenIndex
- * @return
- */
-size_t Parser::tokenIndex() const{
-    return index_;
-}
-
-/**
- * @brief Parser::setTokenIndex
- * @param index
- */
-void Parser::setTokenIndex(size_t index) {
-    index_ = index;
-}
-
-/**
  * @brief Parser::parseForStatement
  * @return
  */
 std::unique_ptr<Statement> Parser::parseForStatement() {
 
-    auto forToken = readToken();
-    if(forToken.type != Token::For) {
-        throw SyntaxError(forToken);
+    consumeRequired<SyntaxError>(Token::For);
+    consumeRequired<MissingOpenParen>(Token::LeftParen);
+
+    std::vector<std::unique_ptr<Expression>> init_exprs = parseExpressionList();
+
+    if (peekToken().type == Token::Semicolon) {
+		// standard C-style FOR loop
+
+		// consume the semicolon now that we are sure
+        consumeRequired<MissingSemicolon>(Token::Semicolon);
+
+		auto cond = parseExpression();
+
+        consumeRequired<MissingSemicolon>(Token::Semicolon);
+
+        std::vector<std::unique_ptr<Expression>> incr_exprs = parseExpressionList();
+
+        consumeRequired<MissingClosingParen>(Token::RightParen);
+
+		// consume any newlines
+		while (peekToken().type == Token::Newline) {
+			readToken();
+		}
+
+        if (cond->get<InvalidExpression>()) {
+			cond = nullptr;
+		}
+
+		auto body = parseStatement();
+
+		auto loop   = std::make_unique<LoopStatement>();
+        loop->body  = std::move(body);
+        loop->init  = std::move(init_exprs);
+        loop->incr  = std::move(incr_exprs);
+        loop->cond  = std::move(cond);
+
+		return loop;
     }
 
-    // TODO(eteran): support commas in init/incr portions
-
-    Token openParen = readToken();
-    if (openParen.type != Token::LeftParen) {
-        throw MissingOpenParen(openParen);
-	}
-
-    auto init = parseExpression();
-
-    Token semi1 = peekToken();
-    if(semi1.type == Token::Semicolon) {
-        // standard C-style FOR loop
-
-
-        // consume the semicolon now that we are sure
-        semi1 = readToken();
-
-        auto cond = parseExpression();
-
-        Token semi2 = readToken();
-        if (semi2.type != Token::Semicolon) {
-            throw MissingSemicolon(semi2);
-        }
-
-        auto incr = parseExpression();
-
-        Token closeParen = readToken();
-        if (closeParen.type != Token::RightParen) {
-            throw MissingClosingParen(closeParen);
-        }
-
-        // consume any newlines
-        while(peekToken().type == Token::Newline) {
-            readToken();
-        }
-
-        if (!init->isValid()) {
-            init = nullptr;
-        }
-
-        if (!cond->isValid()) {
-            cond = nullptr;
-        }
-
-        if (!incr->isValid()) {
-            incr = nullptr;
-        }
-
-        auto body = parseStatement();
-
-        auto loop   = std::make_unique<LoopStatement>();
-        loop->body_ = std::move(body);
-        loop->init_ = std::move(init);
-        loop->incr_ = std::move(incr);
-        loop->cond_ = std::move(cond);
-
-        return loop;
-    } else {
-
-        if(init->type() == Expression::Binary) {
-            BinaryExpression *expr = init->as_binary();
-            if(expr->op == Token::In) {
+    // if we didn't get a semicolon, then we better have a "if(x in y)" expression
+    if(init_exprs.size() == 1) {
+        auto &init = init_exprs[0];
+        if (BinaryExpression *expr = init->get<BinaryExpression>()) {
+            if (expr->op == Token::In) {
                 auto container = std::move(expr->rhs);
                 auto iterator  = std::move(expr->lhs);
 
-                Token closeParen = readToken();
-                if (closeParen.type != Token::RightParen) {
-                    throw MissingClosingParen(closeParen);
-                }
+                consumeRequired<MissingClosingParen>(Token::RightParen);
 
                 // consume any newlines
-                while(peekToken().type == Token::Newline) {
+                while (peekToken().type == Token::Newline) {
                     readToken();
                 }
                 auto body = parseStatement();
 
-                auto loop   = std::make_unique<ForEachStatement>();
+                auto loop       = std::make_unique<ForEachStatement>();
                 loop->iterator  = std::move(iterator);
                 loop->container = std::move(container);
-                loop->body_     = std::move(body);
+                loop->body      = std::move(body);
 
                 return loop;
             }
         }
     }
 
-    throw MissingSemicolon(peekToken());
+	throw MissingSemicolon(peekToken());
 }
 
 /**
@@ -174,47 +123,36 @@ std::unique_ptr<Statement> Parser::parseForStatement() {
  */
 std::unique_ptr<CondStatement> Parser::parseIfStatement() {
 
-    auto ifToken = readToken();
-    if(ifToken.type != Token::If) {
-        throw SyntaxError(ifToken);
-    }
+    consumeRequired<SyntaxError>(Token::If);
+    consumeRequired<MissingOpenParen>(Token::LeftParen);
 
-    Token openParen = readToken();
-    if (openParen.type != Token::LeftParen) {
-        throw MissingOpenParen(openParen);
+    auto condition = parseExpression();
+
+    consumeRequired<MissingClosingParen>(Token::RightParen);
+
+	// consume any newlines
+	while (peekToken().type == Token::Newline) {
+		readToken();
 	}
-
-	auto condition = parseExpression();
-
-
-    Token closeParen = readToken();
-    if (closeParen.type != Token::RightParen) {
-        throw MissingClosingParen(closeParen);
-	}
-
-    // consume any newlines
-    while(peekToken().type == Token::Newline) {
-        readToken();
-    }
 
 	auto body = parseStatement();
 
-    auto cond   = std::make_unique<CondStatement>();
-    cond->body_ = std::move(body);
-    cond->cond_ = std::move(condition);
+	auto cond   = std::make_unique<CondStatement>();
+    cond->body  = std::move(body);
+    cond->cond  = std::move(condition);
 
-    // consume any newlines
-    while(peekToken().type == Token::Newline) {
-        readToken();
-    }
+	// consume any newlines
+	while (peekToken().type == Token::Newline) {
+		readToken();
+	}
 
 	if (peekToken().type == Token::Else) {
 		readToken();
 
-        // consume any newlines
-        while(peekToken().type == Token::Newline) {
-            readToken();
-        }
+		// consume any newlines
+		while (peekToken().type == Token::Newline) {
+			readToken();
+		}
 
 		cond->else_ = parseStatement();
 	}
@@ -227,16 +165,11 @@ std::unique_ptr<CondStatement> Parser::parseIfStatement() {
  * @return
  */
 std::unique_ptr<BreakStatement> Parser::parseBreakStatement() {
-    Token breakToken = readToken();
-    if(breakToken.type != Token::Break) {
-        throw SyntaxError(breakToken);
-    }
 
-    Token nl = readToken();
-    if (nl.type != Token::Newline) {
-        throw MissingNewline(nl);
-    }
-    return std::make_unique<BreakStatement>();
+    consumeRequired<SyntaxError>(Token::Break);
+    consumeRequired<MissingNewline>(Token::Newline);
+
+	return std::make_unique<BreakStatement>();
 }
 
 /**
@@ -244,16 +177,11 @@ std::unique_ptr<BreakStatement> Parser::parseBreakStatement() {
  * @return
  */
 std::unique_ptr<ContinueStatement> Parser::parseContinueStatement() {
-    Token cont = readToken();
-    if(cont.type != Token::Continue) {
-        throw SyntaxError(cont);
-    }
 
-    Token nl = readToken();
-    if (nl.type != Token::Newline) {
-        throw MissingNewline(nl);
-    }
-    return std::make_unique<ContinueStatement>();
+    consumeRequired<SyntaxError>(Token::Continue);
+    consumeRequired<MissingNewline>(Token::Newline);
+
+	return std::make_unique<ContinueStatement>();
 }
 
 /**
@@ -262,24 +190,20 @@ std::unique_ptr<ContinueStatement> Parser::parseContinueStatement() {
  */
 std::unique_ptr<DeleteStatement> Parser::parseDeleteStatement() {
 
-    auto delToken = readToken();
-    if(delToken.type != Token::Delete) {
-        throw SyntaxError(delToken);
+    consumeRequired<SyntaxError>(Token::Delete);
+
+	auto expr = parseExpression();
+
+    if(auto indexExpression = expr->get<ArrayIndexExpression>()) {
+        auto stmt        = std::make_unique<DeleteStatement>();
+        stmt->expression = std::move(indexExpression->array);
+        stmt->index      = std::move(indexExpression->index);
+
+        return stmt;
     }
 
-    auto expr = parseExpression();
+    throw InvalidDelete(peekToken());
 
-    if(expr->type() != Expression::ArrayIndex) {
-        throw InvalidDelete(peekToken());
-    }
-
-    auto indexExpression = expr->as_index();
-
-    auto stmt  = std::make_unique<DeleteStatement>();
-    stmt->expression = std::move(indexExpression->array);
-    stmt->index      = std::move(indexExpression->index);
-
-    return stmt;
 }
 
 /**
@@ -288,16 +212,13 @@ std::unique_ptr<DeleteStatement> Parser::parseDeleteStatement() {
  */
 std::unique_ptr<ReturnStatement> Parser::parseReturnStatement() {
 
-    auto retToken = readToken();
-    if(retToken.type != Token::Return) {
-        throw SyntaxError(retToken);
-    }
+    consumeRequired<SyntaxError>(Token::Return);
 
-    auto expr = parseExpression();
-    auto ret  = std::make_unique<ReturnStatement>();
-    ret->expression = std::move(expr);
+	auto expr       = parseExpression();
+	auto ret        = std::make_unique<ReturnStatement>();
+	ret->expression = std::move(expr);
 
-    return ret;
+	return ret;
 }
 
 /**
@@ -307,19 +228,15 @@ std::unique_ptr<ReturnStatement> Parser::parseReturnStatement() {
 std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
 
 	if (auto expression = parseExpression()) {
-        auto statement = std::make_unique<ExpressionStatement>();
-        statement->expression = std::move(expression);
+		auto statement        = std::make_unique<ExpressionStatement>();
+		statement->expression = std::move(expression);
 
-        Token nl = readToken();
-        if (nl.type != Token::Newline) {
-            throw MissingNewline(nl);
+        consumeRequired<MissingNewline>(Token::Newline);
+
+		// consume any newlines
+		while (peekToken().type == Token::Newline) {
+			readToken();
 		}
-
-        // consume any newlines
-        while(peekToken().type == Token::Newline) {
-            readToken();
-        }
-
 
 		return statement;
 	}
@@ -332,19 +249,16 @@ std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
  * @return
  */
 std::unique_ptr<ExpressionStatement> Parser::parseEmptyStatement() {
-    // empty expression
+	// empty expression
 
-    Token nl = readToken();
-    if (nl.type != Token::Newline) {
-        throw MissingNewline(nl);
-    }
+    consumeRequired<MissingNewline>(Token::Newline);
 
     // consume any newlines
-    while(peekToken().type == Token::Newline) {
-        readToken();
-    }
+	while (peekToken().type == Token::Newline) {
+		readToken();
+	}
 
-    return std::make_unique<ExpressionStatement>();
+	return std::make_unique<ExpressionStatement>();
 }
 
 /**
@@ -353,10 +267,8 @@ std::unique_ptr<ExpressionStatement> Parser::parseEmptyStatement() {
  */
 std::unique_ptr<Expression> Parser::parseExpression() {
 
-    auto expr = std::make_unique<Expression>();
-
+	auto expr = std::make_unique<Expression>();
 	parseExpression0(expr);
-
 	return expr;
 }
 
@@ -366,35 +278,23 @@ std::unique_ptr<Expression> Parser::parseExpression() {
  */
 std::unique_ptr<LoopStatement> Parser::parseWhileStatement() {
 
-    auto whileToken = readToken();
-    if(whileToken.type != Token::While) {
-        throw SyntaxError(whileToken);
-    }
+    consumeRequired<SyntaxError>(Token::While);
+    consumeRequired<MissingOpenParen>(Token::LeftParen);
 
-    Token openParen = readToken();
-    if (openParen.type != Token::LeftParen) {
-        throw MissingOpenParen(openParen);
+	auto condition = parseExpression();
+
+    consumeRequired<MissingClosingParen>(Token::RightParen);
+
+	// consume any newlines
+	while (peekToken().type == Token::Newline) {
+		readToken();
 	}
-
-    auto condition = parseExpression();
-
-    Token closeParen = readToken();
-    if (closeParen.type != Token::RightParen) {
-        throw MissingClosingParen(closeParen);
-	}
-
-    // consume any newlines
-    while(peekToken().type == Token::Newline) {
-        readToken();
-    }
 
 	auto body = parseStatement();
 
-    auto loop   = std::make_unique<LoopStatement>();
-    loop->body_ = std::move(body);
-	loop->init_ = nullptr;
-	loop->incr_ = nullptr;
-    loop->cond_ = std::move(condition);
+    auto loop  = std::make_unique<LoopStatement>();
+    loop->body = std::move(body);
+    loop->cond = std::move(condition);
 
 	return loop;
 }
@@ -405,21 +305,15 @@ std::unique_ptr<LoopStatement> Parser::parseWhileStatement() {
  */
 std::unique_ptr<BlockStatement> Parser::parseBlockStatement() {
 
+    consumeRequired<MissingOpenBrace>(Token::LeftBrace);
+
     auto block = std::make_unique<BlockStatement>();
 
-    Token openBrace = readToken();
-    if (openBrace.type != Token::LeftBrace) {
-        throw MissingOpenBrace(openBrace);
-	}
-
-	while (peekToken().type != Token::RightBrace) {
+    while (peekToken().type != Token::RightBrace) {
         block->statements.push_back(parseStatement());
-	}
+    }
 
-    Token closeBrace = readToken();
-    if (closeBrace.type != Token::RightBrace) {
-        throw MissingClosingBrace(closeBrace);
-	}
+    consumeRequired<MissingClosingBrace>(Token::RightBrace);
 
 	return block;
 }
@@ -430,36 +324,33 @@ std::unique_ptr<BlockStatement> Parser::parseBlockStatement() {
  */
 std::unique_ptr<FunctionStatement> Parser::parseFunctionStatement() {
 
-    auto defToken = readToken();
-    if(defToken.type != Token::Define) {
-        throw SyntaxError(defToken);
-    }
+    consumeRequired<SyntaxError>(Token::Define);
 
-    if(in_function_) {
-        throw FunctionDefinedWithinFunction(peekToken());
-    }
+	if (in_function_) {
+		throw FunctionDefinedWithinFunction(peekToken());
+	}
 
-    in_function_ = true;
+	in_function_ = true;
 
-    Token name = readToken();
-    if(name.type != Token::Identifier) {
-        throw MissingIdentifier(name);
-    }
+	Token name = readToken();
+	if (name.type != Token::Identifier) {
+		throw MissingIdentifier(name);
+	}
 
-    // consume any newlines
-    while(peekToken().type == Token::Newline) {
-        readToken();
-    }
+	// consume any newlines
+	while (peekToken().type == Token::Newline) {
+		readToken();
+	}
 
-    std::unique_ptr<BlockStatement> body = parseBlockStatement();
-    auto function = std::make_unique<FunctionStatement>();
+	std::unique_ptr<BlockStatement> body     = parseBlockStatement();
+	auto                            function = std::make_unique<FunctionStatement>();
 
-    function->name       = name.value;
-    function->statements = std::move(body->statements);
+	function->name       = name.value;
+	function->statements = std::move(body->statements);
 
-    in_function_ = false;
+	in_function_ = false;
 
-    return function;
+	return function;
 }
 
 /**
@@ -472,11 +363,11 @@ std::unique_ptr<Statement> Parser::parseStatement() {
 
 	switch (token.type) {
 	default:
-        throw UnexpectedKeyword(token);
-    case Token::Delete:
-        return parseDeleteStatement();
-    case Token::Return:
-        return parseReturnStatement();
+		throw UnexpectedKeyword(token);
+	case Token::Delete:
+		return parseDeleteStatement();
+	case Token::Return:
+		return parseReturnStatement();
 	case Token::LeftBrace:
 		return parseBlockStatement();
 	case Token::While:
@@ -486,26 +377,26 @@ std::unique_ptr<Statement> Parser::parseStatement() {
 	case Token::If:
 		return parseIfStatement();
 	case Token::Identifier:
-    case Token::Increment:
-    case Token::Decrement:
-        return parseExpressionStatement();
-    case Token::Newline:
-        return parseEmptyStatement();
+	case Token::Increment:
+	case Token::Decrement:
+		return parseExpressionStatement();
+	case Token::Newline:
+		return parseEmptyStatement();
 	case Token::RightParen:
 	case Token::LeftParen:
-        throw UnexpectedParen(token);
+		throw UnexpectedParen(token);
 	case Token::RightBrace:
-        throw UnexpectedBrace(token);
-    case Token::LeftBracket:
-        throw UnexpectedBracket(token);
+		throw UnexpectedBrace(token);
+	case Token::LeftBracket:
+		throw UnexpectedBracket(token);
 	case Token::String:
-        throw UnexpectedStringConstant(token);
-    case Token::Break:
-        return parseBreakStatement();
-    case Token::Continue:
-        return parseContinueStatement();
+		throw UnexpectedStringConstant(token);
+	case Token::Break:
+		return parseBreakStatement();
+	case Token::Continue:
+		return parseContinueStatement();
 	case Token::Define:
-        return parseFunctionStatement();
+		return parseFunctionStatement();
 	case Token::Invalid:
 		// no more tokens
 		return nullptr;
@@ -518,31 +409,31 @@ std::unique_ptr<Statement> Parser::parseStatement() {
  */
 void Parser::parseExpression0(std::unique_ptr<Expression> &exp) {
 
-    // =, +=, -=. *=, /=, %=
+	// =, +=, -=. *=, /=, %=
 
-    parseExpression1(exp);
+	parseExpression1(exp);
 
-    Token op = peekToken();
+	Token op = peekToken();
 
-    if (op.type == Token::Assign || op.type == Token::AddAssign || op.type == Token::SubAssign || op.type == Token::MulAssign || op.type == Token::DivAssign || op.type == Token::ModAssign) {
+	if (op.type == Token::Assign || op.type == Token::AddAssign || op.type == Token::SubAssign || op.type == Token::MulAssign || op.type == Token::DivAssign || op.type == Token::ModAssign) {
 
-        op = readToken();
+		op = readToken();
 
-        BinaryExpression bin;
+		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
-        bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
+		bin.op  = op.type;
+		bin.rhs = std::make_unique<Expression>();
 
-        // upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		// upgrade the expression we have already to being an LHS value
+		*bin.lhs = std::move(*exp);
 
-        // parse the RHS expression
-        parseExpression0(bin.rhs);
+		// parse the RHS expression
+		parseExpression0(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
-    }
+		*exp = std::move(bin);
+		op   = peekToken();
+	}
 }
 
 /**
@@ -551,35 +442,35 @@ void Parser::parseExpression0(std::unique_ptr<Expression> &exp) {
  */
 void Parser::parseExpression1(std::unique_ptr<Expression> &exp) {
 
-    // (concatenation)
+	// (concatenation)
 	// NOTE(eteran): this "operator when there is no operator" is a very poor
-	// design choice IMO and requires a bit of hackyness to do correctly :-(
-	// would have been much better if they did something like: "hello " . "world"
+    // design choice IMO, and requires a bit of hackyness to do correctly :-(
+    // it would have been much better if they did something like: "hello " . "world"
 	// (using something like a dot operator to mean concat, avoid + makes sense
 	// since integers and strings get implicitly converted between each other)
 
 	parseExpression2(exp);
 
-    Token op = peekToken();
-    while(op.type == Token::LeftParen || op.type == Token::Identifier || op.type == Token::Integer || op.type == Token::String) {
-        // NOTE(eteran): NOT a readToken() like the rest, since there is no actual operator in the code!
-        // op = readToken();
+	Token op = peekToken();
+	while (op.type == Token::LeftParen || op.type == Token::Identifier || op.type == Token::Integer || op.type == Token::String) {
+		// NOTE(eteran): NOT a readToken() like the rest, since there is no actual operator in the code!
+		// op = readToken();
 
-        BinaryExpression bin;
+		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
-        bin.op  = Token::Concatenate;
-        bin.rhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
+		bin.op  = Token::Concatenate;
+		bin.rhs = std::make_unique<Expression>();
 
-        // upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		// upgrade the expression we have already to being an LHS value
+		*bin.lhs = std::move(*exp);
 
-        // parse the RHS expression
-        parseExpression1(bin.rhs);
+		// parse the RHS expression
+		parseExpression1(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
-    }
+		*exp = std::move(bin);
+		op   = peekToken();
+	}
 }
 
 /**
@@ -599,17 +490,17 @@ void Parser::parseExpression2(std::unique_ptr<Expression> &exp) {
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression2(bin.rhs);
 
-        *exp = std::move(bin);
+		*exp = std::move(bin);
 		op   = peekToken();
 	}
 }
@@ -631,18 +522,18 @@ void Parser::parseExpression3(std::unique_ptr<Expression> &exp) {
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression3(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
+		*exp = std::move(bin);
+		op   = peekToken();
 	}
 }
 
@@ -663,18 +554,18 @@ void Parser::parseExpression4(std::unique_ptr<Expression> &exp) {
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression4(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
+		*exp = std::move(bin);
+		op   = peekToken();
 	}
 }
 
@@ -695,18 +586,18 @@ void Parser::parseExpression5(std::unique_ptr<Expression> &exp) {
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression5(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
+		*exp = std::move(bin);
+		op   = peekToken();
 	}
 }
 
@@ -715,32 +606,32 @@ void Parser::parseExpression5(std::unique_ptr<Expression> &exp) {
  * @param exp
  */
 void Parser::parseExpression6(std::unique_ptr<Expression> &exp) {
-    // >=, >, <, <=, ==, !=, in
+	// >=, >, <, <=, ==, !=, in
 
-    // NOTE(eteran): according to NEDIT sources "in" shares priority with these
+	// NOTE(eteran): according to NEDIT sources "in" shares priority with these
 
-    parseExpression7(exp);
+	parseExpression7(exp);
 
 	Token op = peekToken();
 
-    while (op.type == Token::In || op.type == Token::GreaterThan || op.type == Token::GreaterThanOrEqual || op.type == Token::LessThan || op.type == Token::LessThanOrEqual || op.type == Token::Equal || op.type == Token::NotEqual) {
+	while (op.type == Token::In || op.type == Token::GreaterThan || op.type == Token::GreaterThanOrEqual || op.type == Token::LessThan || op.type == Token::LessThanOrEqual || op.type == Token::Equal || op.type == Token::NotEqual) {
 
 		op = readToken();
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression6(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
+		*exp = std::move(bin);
+		op   = peekToken();
 	}
 }
 
@@ -760,18 +651,18 @@ void Parser::parseExpression7(std::unique_ptr<Expression> &exp) {
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression7(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
+		*exp = std::move(bin);
+		op   = peekToken();
 	}
 }
 
@@ -790,18 +681,18 @@ void Parser::parseExpression8(std::unique_ptr<Expression> &exp) {
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression8(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
+		*exp = std::move(bin);
+		op   = peekToken();
 	}
 }
 
@@ -811,43 +702,43 @@ void Parser::parseExpression8(std::unique_ptr<Expression> &exp) {
  */
 void Parser::parseExpression9(std::unique_ptr<Expression> &exp) {
 
-    // -, !, ++, -- (unary)
-    Token op = peekToken();
-    while (op.type == Token::Increment || op.type == Token::Decrement || op.type == Token::Sub || op.type == Token::Not) {
-        op = readToken();
+	// -, !, ++, -- (unary)
+	Token op = peekToken();
+	while (op.type == Token::Increment || op.type == Token::Decrement || op.type == Token::Sub || op.type == Token::Not) {
+		op = readToken();
 
-        UnaryExpression expr;
+		UnaryExpression expr;
 
-        expr.op        = op.type;
-        expr.operand   = std::make_unique<Expression>();
-        expr.prefix    = true;
+		expr.op      = op.type;
+		expr.operand = std::make_unique<Expression>();
+		expr.prefix  = true;
 
-        // parse the operand expression
-        parseExpression9(expr.operand);
+		// parse the operand expression
+		parseExpression9(expr.operand);
 
-        *exp = std::move(expr);
-        op   = peekToken();
-    }
+		*exp = std::move(expr);
+		op   = peekToken();
+	}
 
-    parseExpression10(exp);
+	parseExpression10(exp);
 
-    // ++, -- (postfix)
-    op = peekToken();
-    while (op.type == Token::Increment || op.type == Token::Decrement) {
-        op = readToken();
+	// ++, -- (postfix)
+	op = peekToken();
+	while (op.type == Token::Increment || op.type == Token::Decrement) {
+		op = readToken();
 
-        UnaryExpression expr;
+		UnaryExpression expr;
 
-        expr.op      = op.type;
-        expr.operand = std::make_unique<Expression>();
-        expr.prefix  = false;
+		expr.op      = op.type;
+		expr.operand = std::make_unique<Expression>();
+		expr.prefix  = false;
 
-        // upgrade the expression we have already to being an LHS value
-        *expr.operand = std::move(*exp);
+		// upgrade the expression we have already to being an LHS value
+		*expr.operand = std::move(*exp);
 
-        *exp = std::move(expr);
-        op   = peekToken();
-    }
+		*exp = std::move(expr);
+		op   = peekToken();
+	}
 }
 
 /**
@@ -859,26 +750,26 @@ void Parser::parseExpression10(std::unique_ptr<Expression> &exp) {
 
 	parseExpression11(exp);
 
-    // NOTE(eteran): we don't loop, as that would make things left-right
-    //               associative, but this operator is right-left associative
+	// NOTE(eteran): we don't loop, as that would make things left-right
+	//               associative, but this operator is right-left associative
 	Token op = peekToken();
-    if (op.type == Token::Exponent) {
+	if (op.type == Token::Exponent) {
 		op = readToken();
 
 		BinaryExpression bin;
 
-        bin.lhs = std::make_unique<Expression>();
+		bin.lhs = std::make_unique<Expression>();
 		bin.op  = op.type;
-        bin.rhs = std::make_unique<Expression>();
+		bin.rhs = std::make_unique<Expression>();
 
 		// upgrade the expression we have already to being an LHS value
-        *bin.lhs = std::move(*exp);
+		*bin.lhs = std::move(*exp);
 
 		// parse the RHS expression
 		parseExpression10(bin.rhs);
 
-        *exp = std::move(bin);
-        op   = peekToken();
+		*exp = std::move(bin);
+		op   = peekToken();
 	}
 }
 
@@ -891,19 +782,16 @@ void Parser::parseExpression11(std::unique_ptr<Expression> &exp) {
 
 	Token token = peekToken();
 
-    if(token.type == Token::LeftParen) {
-        token = readToken();
+	if (token.type == Token::LeftParen) {
+		token = readToken();
 
-        // get sub-expression
-        parseExpression0(exp);
+		// get sub-expression
+		parseExpression0(exp);
 
-        Token closeParen = readToken();
-        if (closeParen.type != Token::RightParen) {
-            throw MissingClosingParen(closeParen);
-        }
-    } else {
-        parseArrayIndex(exp);
-    }
+        consumeRequired<MissingClosingParen>(Token::RightParen);
+	} else {
+		parseArrayIndex(exp);
+	}
 }
 
 /**
@@ -912,33 +800,30 @@ void Parser::parseExpression11(std::unique_ptr<Expression> &exp) {
  */
 void Parser::parseArrayIndex(std::unique_ptr<Expression> &exp) {
 
-    parseAtom(exp);
+	parseAtom(exp);
 
-    Token leftBracket = peekToken();
-    while(leftBracket.type == Token::LeftBracket) {
+	Token leftBracket = peekToken();
+	while (leftBracket.type == Token::LeftBracket) {
 
-        // consume the left bracket
-        readToken();
+		// consume the left bracket
+		readToken();
 
-        std::unique_ptr<Expression> index = parseExpression();
+        std::vector<std::unique_ptr<Expression>> index = parseExpressionList();
 
-        Token closeBracket = readToken();
-        if(closeBracket.type != Token::RightBracket) {
-            throw MissingClosingBracket(closeBracket);
-        }
+        consumeRequired<MissingClosingBracket>(Token::RightBracket);
 
-        ArrayIndexExpression arrayIndex;
-        arrayIndex.array = std::make_unique<Expression>();
-        arrayIndex.index = std::move(index);
+		ArrayIndexExpression arrayIndex;
+		arrayIndex.array = std::make_unique<Expression>();
+		arrayIndex.index = std::move(index);
 
-        *(arrayIndex.array) = std::move(*exp);
+		*(arrayIndex.array) = std::move(*exp);
 
-        *exp = std::move(arrayIndex);
+		*exp = std::move(arrayIndex);
 
-        leftBracket = peekToken();
-    }
+		leftBracket = peekToken();
+	}
 
-    parseCall(exp);
+	parseCall(exp);
 }
 
 /**
@@ -946,59 +831,54 @@ void Parser::parseArrayIndex(std::unique_ptr<Expression> &exp) {
  * @param exp
  */
 void Parser::parseAtom(std::unique_ptr<Expression> &exp) {
-    // var, $var, 123, "hello"
+	// var, $var, 123, "hello"
 
 	Token token = peekToken();
 
-    if (token.type == Token::Identifier || token.type == Token::Integer || token.type == Token::String) {
-        Token name  = readToken();
+	if (token.type == Token::Identifier || token.type == Token::Integer || token.type == Token::String) {
+		Token name = readToken();
 
-        AtomExpression atom;
-        atom.atom = name.value;
-        *exp = atom;
+		AtomExpression atom;
+		atom.atom = name.value;
+		*exp      = atom;
 	}
 }
-
-
 
 /**
  * @brief Parser::parseCall
  * @param exp
  */
 void Parser::parseCall(std::unique_ptr<Expression> &exp) {
-    Token leftBracket = peekToken();
-    if(leftBracket.type == Token::LeftParen) {
+	Token leftBracket = peekToken();
+	if (leftBracket.type == Token::LeftParen) {
 
-        // consume the left parens
-        readToken();
+		// consume the left parens
+		readToken();
 
-        if(peekToken().type == Token::RightParen) {
-            // empty parameter list
-            // consume the closing parameter
-            readToken();
+		if (peekToken().type == Token::RightParen) {
+			// empty parameter list
+			// consume the closing parameter
+            consumeRequired<MissingClosingParen>(Token::RightParen);
 
-            CallExpression call;
-            call.function   = std::move(exp);
+			CallExpression call;
+			call.function = std::move(exp);
 
-            exp = std::make_unique<Expression>();
-            *exp = std::move(call);
+			exp  = std::make_unique<Expression>();
+			*exp = std::move(call);
 
-        } else {
-            std::vector<std::unique_ptr<Expression>> arguments = parseExpressionList();
+		} else {
+			std::vector<std::unique_ptr<Expression>> arguments = parseExpressionList();
 
-            Token closeParen = readToken();
-            if(closeParen.type != Token::RightParen) {
-                throw MissingClosingParen(closeParen);
-            }
+            consumeRequired<MissingClosingParen>(Token::RightParen);
 
-            CallExpression call;
-            call.function   = std::move(exp);
-            call.parameters = std::move(arguments);
+			CallExpression call;
+			call.function   = std::move(exp);
+			call.parameters = std::move(arguments);
 
-            exp = std::make_unique<Expression>();
-            *exp = std::move(call);
-        }
-    }
+			exp  = std::make_unique<Expression>();
+			*exp = std::move(call);
+		}
+	}
 }
 
 /**
@@ -1006,19 +886,19 @@ void Parser::parseCall(std::unique_ptr<Expression> &exp) {
  * @return
  */
 std::vector<std::unique_ptr<Expression>> Parser::parseExpressionList() {
-    std::vector<std::unique_ptr<Expression>> expressions;
+	std::vector<std::unique_ptr<Expression>> expressions;
 
-    while(true) {
-        auto expr = parseExpression();
-        expressions.push_back(std::move(expr));
+	while (true) {
+		auto expr = parseExpression();
+		expressions.push_back(std::move(expr));
 
-        if(peekToken().type != Token::Comma) {
-            break;
-        }
+		if (peekToken().type != Token::Comma) {
+			break;
+		}
 
-        // consume the comma
-        readToken();
-    }
+		// consume the comma
+		readToken();
+	}
 
-    return expressions;
+	return expressions;
 }

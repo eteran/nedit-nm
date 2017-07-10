@@ -8,265 +8,292 @@
 
 class Error : public std::exception {
 public:
-    virtual ~Error() = default;
+	virtual ~Error() = default;
+
 public:
-    const char *what() const noexcept override = 0;
+	const char *what() const noexcept override = 0;
 };
 
 class FileNotFound : public Error {
 public:
-    explicit FileNotFound(const std::string &filename) : filename_(filename) {
-    }
+	explicit FileNotFound(const std::string &filename) : filename_(filename) {
+	}
 
 public:
-    const char *what() const noexcept override {
+	const char *what() const noexcept override {
 		return "FileNotFound";
 	}
-	
+
 	const std::string &filename() const {
 		return filename_;
 	}
-	
+
 private:
 	const std::string filename_;
 };
 
 class SyntaxError : public Error {
 public:
-    explicit SyntaxError(const Token &token) : token_(token) {
-    }
+	explicit SyntaxError(const Token &token) : token_(token) {
+	}
 
 public:
-    const char *what() const noexcept override {
-        return "SyntaxError";
-    }
+	const char *what() const noexcept override {
+		return "SyntaxError";
+	}
 
 public:
-    size_t line() const { return token_.context.line(); }
-    size_t column() const { return token_.context.column(); }
-    const Token &token() const { return token_; }
+	size_t line() const {
+        return token_.context.line();
+	}
+	size_t column() const {
+        return token_.context.column();
+	}
+	const Token &token() const {
+		return token_;
+	}
 
 private:
-    Token token_;
+	Token token_;
 };
 
 class FunctionDefinedWithinFunction : public SyntaxError {
 public:
-    explicit FunctionDefinedWithinFunction(const Token &token) : SyntaxError(token) {
-    }
+	explicit FunctionDefinedWithinFunction(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "FunctionDefinedWithinFunction";
-    }
+	const char *what() const noexcept override {
+		return "FunctionDefinedWithinFunction";
+	}
 };
 
 class MissingIdentifier : public SyntaxError {
 public:
-    explicit MissingIdentifier(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingIdentifier(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingIdentifier";
-    }
+	const char *what() const noexcept override {
+		return "MissingIdentifier";
+	}
 };
 
 class MissingClosingBracket : public SyntaxError {
 public:
-    explicit MissingClosingBracket(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingClosingBracket(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingClosingBracket";
-    }
+	const char *what() const noexcept override {
+		return "MissingClosingBracket";
+	}
 };
 
 class MissingClosingBrace : public SyntaxError {
 public:
-    explicit MissingClosingBrace(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingClosingBrace(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingClosingBrace";
-    }
+	const char *what() const noexcept override {
+		return "MissingClosingBrace";
+	}
 };
 
 class MissingOpenBrace : public SyntaxError {
 public:
-    explicit MissingOpenBrace(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingOpenBrace(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingOpenBrace";
-    }
+	const char *what() const noexcept override {
+		return "MissingOpenBrace";
+	}
 };
 
 class MissingClosingParen : public SyntaxError {
 public:
-    explicit MissingClosingParen(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingClosingParen(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingClosingParen";
-    }
+	const char *what() const noexcept override {
+		return "MissingClosingParen";
+	}
 };
 
 class MissingOpenParen : public SyntaxError {
 public:
-    explicit MissingOpenParen(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingOpenParen(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingOpenParen";
-    }
+	const char *what() const noexcept override {
+		return "MissingOpenParen";
+	}
 };
 
 class MissingNewline : public SyntaxError {
 public:
-    explicit MissingNewline(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingNewline(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingNewline";
-    }
+	const char *what() const noexcept override {
+		return "MissingNewline";
+	}
 };
 
 class MissingSemicolon : public SyntaxError {
 public:
-    explicit MissingSemicolon(const Token &token) : SyntaxError(token) {
-    }
+	explicit MissingSemicolon(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "MissingSemicolon";
-    }
+	const char *what() const noexcept override {
+		return "MissingSemicolon";
+	}
 };
 
 class UnexpectedBrace : public SyntaxError {
 public:
-    explicit UnexpectedBrace(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedBrace(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedBrace";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedBrace";
+	}
 };
 
 class UnexpectedBracket : public SyntaxError {
 public:
-    explicit UnexpectedBracket(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedBracket(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedBracket";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedBracket";
+	}
 };
 
 class UnexpectedKeyword : public SyntaxError {
 public:
-    explicit UnexpectedKeyword(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedKeyword(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedKeyword";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedKeyword";
+	}
 };
 
 class UnexpectedParen : public SyntaxError {
 public:
-    explicit UnexpectedParen(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedParen(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedParen";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedParen";
+	}
 };
 
 class UnexpectedStringConstant : public SyntaxError {
 public:
-    explicit UnexpectedStringConstant(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedStringConstant(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedStringConstant";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedStringConstant";
+	}
 };
 
 class UnexpectedNumericConstant : public SyntaxError {
 public:
-    explicit UnexpectedNumericConstant(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedNumericConstant(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedNumericConstant";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedNumericConstant";
+	}
 };
 
 class UnexpectedIdentifier : public SyntaxError {
 public:
-    explicit UnexpectedIdentifier(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedIdentifier(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedIdentifier";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedIdentifier";
+	}
 };
 
 class InvalidDelete : public SyntaxError {
 public:
-    explicit InvalidDelete(const Token &token) : SyntaxError(token) {
-    }
+	explicit InvalidDelete(const Token &token) : SyntaxError(token) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "InvalidDelete";
-    }
+	const char *what() const noexcept override {
+		return "InvalidDelete";
+	}
 };
 
 class TokenizationError : public Error {
 public:
-    explicit TokenizationError(const Context &context) : context_(context) {
-    }
-public:
-    const char *what() const noexcept override {
-        return "TokenizationError";
-    }
+	explicit TokenizationError(const Context &context) : context_(context) {
+	}
 
 public:
-    const Context &context() const { return context_; }
+	const char *what() const noexcept override {
+		return "TokenizationError";
+	}
+
+public:
+	const Context &context() const {
+		return context_;
+	}
 
 private:
-    Context context_;
+	Context context_;
 };
 
 class InvalidIdentifier : public TokenizationError {
 public:
-    explicit InvalidIdentifier(const Context &context) : TokenizationError(context) {
-    }
+	explicit InvalidIdentifier(const Context &context) : TokenizationError(context) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "InvalidIdentifier";
-    }
+	const char *what() const noexcept override {
+		return "InvalidIdentifier";
+	}
 };
 
 class InvalidNumericConstant : public TokenizationError {
 public:
-    explicit InvalidNumericConstant(const Context &context) : TokenizationError(context) {
-    }
+	explicit InvalidNumericConstant(const Context &context) : TokenizationError(context) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "InvalidNumericConstant";
-    }
+	const char *what() const noexcept override {
+		return "InvalidNumericConstant";
+	}
 };
 
 class InvalidEscapeSequence : public TokenizationError {
 public:
-    explicit InvalidEscapeSequence(const Context &context) : TokenizationError(context) {
-    }
+	explicit InvalidEscapeSequence(const Context &context) : TokenizationError(context) {
+	}
+
 public:
-    const char *what() const noexcept override {
-        return "InvalidEscapeSequence";
-    }
+	const char *what() const noexcept override {
+		return "InvalidEscapeSequence";
+	}
 };
-
-
-
 
 #endif

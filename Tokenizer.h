@@ -7,11 +7,8 @@
 #include <vector>
 
 class Tokenizer {
-	using const_iterator = std::vector<Token>::const_iterator;
-
 public:
 	explicit Tokenizer(const std::string &filename);
-	~Tokenizer() = default;
 
 public:
 	size_t size() const {
@@ -25,14 +22,6 @@ public:
 		} else {
 			return Token();
 		}
-	}
-
-public:
-	const_iterator begin() const {
-		return tokens_.begin();
-	}
-	const_iterator end() const {
-		return tokens_.end();
 	}
 
 private:

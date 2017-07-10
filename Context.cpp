@@ -6,7 +6,6 @@
  * @brief Context::Context
  */
 Context::Context() : line_(0), column_(0) {
-
 }
 
 /**
@@ -14,5 +13,4 @@ Context::Context() : line_(0), column_(0) {
  * @param input
  */
 Context::Context(const Input &input) : line_(input.line()), column_(input.column()) {
-
 }

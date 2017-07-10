@@ -7,12 +7,16 @@ class Input;
 
 class Context {
 public:
-    Context();
+	Context();
     explicit Context(const Input &input);
 
 public:
-    size_t line() const { return line_; }
-    size_t column() const { return column_; }
+    size_t line() const {
+        return line_;
+    }
+    size_t column() const {
+        return column_;
+    }
 
 private:
     size_t line_;

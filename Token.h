@@ -7,23 +7,23 @@
 
 class Token {
 public:
-	enum Type {
+    enum Type : uint8_t {
 		Invalid,
 		Add,
 		Sub,
 		Mul,
 		Div,
 		Mod,
-        Not,
-        Increment,
-        Decrement,
+		Not,
+		Increment,
+		Decrement,
 		LeftBrace,
 		RightBrace,
 		LeftParen,
 		RightParen,
-        LeftBracket,
-        RightBracket,
-        Semicolon,
+		LeftBracket,
+		RightBracket,
+		Semicolon,
 		AddAssign,
 		SubAssign,
 		MulAssign,
@@ -44,11 +44,11 @@ public:
 		While,
 		Define,
 		For,
-        Delete,
-        Comma,
-        Newline,
+		Delete,
+		Comma,
+		Newline,
 		If,
-        In,
+		In,
 		Else,
 		Switch,
 		Break,
@@ -57,19 +57,19 @@ public:
 		Integer,
 		String,
 		Identifier,
-        Concatenate
+		Concatenate
 	};
 
 public:
-    Token() : type(Invalid) {
+	Token() : type(Invalid) {
 	}
 
-    Token(Type t, const std::string &v, const Context &c) : type(t), value(v), context(c) {
+	Token(Type t, const std::string &v, const Context &c) : type(t), value(v), context(c) {
 	}
 
 	Type        type;
 	std::string value;
-    Context     context;
+	Context     context;
 };
 
 #endif
