@@ -21,7 +21,7 @@ void fold_string_expression(AtomExpression *left, AtomExpression *right, Token::
         atom.type   = Token::Type::String;
         *expression = atom;
     }
-    break;
+        break;
     default:
         break;
     }
