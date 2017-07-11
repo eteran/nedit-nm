@@ -151,6 +151,10 @@ void fold(std::unique_ptr<Expression> &expression) {
         for(auto &param : call->parameters) {
             fold(param);
         }
+    } else if(auto arr = expression->get<ArrayIndexExpression>()) {
+        for(auto &idx : arr->index) {
+            fold(idx);
+        }
     }
 }
 
