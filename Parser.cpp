@@ -5,10 +5,6 @@
 #include "Input.h"
 #include "Statement.h"
 #include "Tokenizer.h"
-#include <cassert>
-#include <cstring>
-#include <fstream>
-#include <iostream>
 #include <memory>
 
 /**
@@ -73,10 +69,6 @@ std::unique_ptr<Statement> Parser::parseForStatement() {
 			readToken();
 		}
 
-        if (cond->get<InvalidExpression>()) {
-			cond = nullptr;
-		}
-
 		auto body = parseStatement();
 
 		auto loop   = std::make_unique<LoopStatement>();
@@ -88,10 +80,11 @@ std::unique_ptr<Statement> Parser::parseForStatement() {
 		return loop;
     }
 
+
     // if we didn't get a semicolon, then we better have a "if(x in y)" expression
     if(init_exprs.size() == 1) {
         auto &init = init_exprs[0];
-        if (BinaryExpression *expr = init->get<BinaryExpression>()) {
+        if (BinaryExpression *expr = dynamic_cast<BinaryExpression *>(init.get())) {
             if (expr->op == Token::In) {
                 auto container = std::move(expr->rhs);
                 auto iterator  = std::move(expr->lhs);
@@ -194,13 +187,14 @@ std::unique_ptr<DeleteStatement> Parser::parseDeleteStatement() {
 
 	auto expr = parseExpression();
 
-    if(auto indexExpression = expr->get<ArrayIndexExpression>()) {
+    if(auto indexExpression = dynamic_cast<ArrayIndexExpression *>(expr.get())) {
         auto stmt        = std::make_unique<DeleteStatement>();
         stmt->expression = std::move(indexExpression->array);
         stmt->index      = std::move(indexExpression->index);
 
         return stmt;
     }
+
 
     throw InvalidDelete(peekToken());
 
@@ -259,17 +253,6 @@ std::unique_ptr<ExpressionStatement> Parser::parseEmptyStatement() {
 	}
 
 	return std::make_unique<ExpressionStatement>();
-}
-
-/**
- * @brief Parser::parseExpression
- * @return
- */
-std::unique_ptr<Expression> Parser::parseExpression() {
-
-	auto expr = std::make_unique<Expression>();
-	parseExpression0(expr);
-	return expr;
 }
 
 /**
@@ -404,6 +387,17 @@ std::unique_ptr<Statement> Parser::parseStatement() {
 }
 
 /**
+ * @brief Parser::parseExpression
+ * @return
+ */
+std::unique_ptr<Expression> Parser::parseExpression() {
+
+    std::unique_ptr<Expression> expr;
+    parseExpression0(expr);
+    return expr;
+}
+
+/**
  * @brief Parser::parseExpression0
  * @param exp
  */
@@ -419,20 +413,16 @@ void Parser::parseExpression0(std::unique_ptr<Expression> &exp) {
 
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression0(bin.rhs);
+        parseExpression0(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -456,20 +446,16 @@ void Parser::parseExpression1(std::unique_ptr<Expression> &exp) {
 		// NOTE(eteran): NOT a readToken() like the rest, since there is no actual operator in the code!
 		// op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = Token::Concatenate;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = Token::Concatenate;
 
 		// parse the RHS expression
-		parseExpression1(bin.rhs);
+        parseExpression1(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -488,20 +474,16 @@ void Parser::parseExpression2(std::unique_ptr<Expression> &exp) {
 
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression2(bin.rhs);
+        parseExpression2(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -520,20 +502,16 @@ void Parser::parseExpression3(std::unique_ptr<Expression> &exp) {
 
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression3(bin.rhs);
+        parseExpression3(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -552,20 +530,16 @@ void Parser::parseExpression4(std::unique_ptr<Expression> &exp) {
 
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        // parse the RHS expression
+        parseExpression4(bin->rhs);
 
-		// parse the RHS expression
-		parseExpression4(bin.rhs);
-
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -584,20 +558,16 @@ void Parser::parseExpression5(std::unique_ptr<Expression> &exp) {
 
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression5(bin.rhs);
+        parseExpression5(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -618,19 +588,15 @@ void Parser::parseExpression6(std::unique_ptr<Expression> &exp) {
 
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression6(bin.rhs);
+        parseExpression6(bin->rhs);
 
-		*exp = std::move(bin);
+        exp = std::move(bin);
 		op   = peekToken();
 	}
 }
@@ -649,20 +615,16 @@ void Parser::parseExpression7(std::unique_ptr<Expression> &exp) {
 	while (op.type == Token::Add || op.type == Token::Sub) {
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression7(bin.rhs);
+        parseExpression7(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -679,20 +641,16 @@ void Parser::parseExpression8(std::unique_ptr<Expression> &exp) {
 	while (op.type == Token::Mul || op.type == Token::Div || op.type == Token::Mod) {
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression8(bin.rhs);
+        parseExpression8(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -707,17 +665,16 @@ void Parser::parseExpression9(std::unique_ptr<Expression> &exp) {
 	while (op.type == Token::Increment || op.type == Token::Decrement || op.type == Token::Sub || op.type == Token::Not) {
 		op = readToken();
 
-		UnaryExpression expr;
+        auto unary = std::make_unique<UnaryExpression>();
 
-		expr.op      = op.type;
-		expr.operand = std::make_unique<Expression>();
-		expr.prefix  = true;
+        unary->op      = op.type;
+        unary->prefix  = true;
 
 		// parse the operand expression
-		parseExpression9(expr.operand);
+        parseExpression9(unary->operand);
 
-		*exp = std::move(expr);
-		op   = peekToken();
+        exp = std::move(unary);
+        op  = peekToken();
 	}
 
 	parseExpression10(exp);
@@ -727,17 +684,14 @@ void Parser::parseExpression9(std::unique_ptr<Expression> &exp) {
 	while (op.type == Token::Increment || op.type == Token::Decrement) {
 		op = readToken();
 
-		UnaryExpression expr;
+        auto unary = std::make_unique<UnaryExpression>();
 
-		expr.op      = op.type;
-		expr.operand = std::make_unique<Expression>();
-		expr.prefix  = false;
+        unary->op      = op.type;
+        unary->operand = std::move(exp);
+        unary->prefix  = false;
 
-		// upgrade the expression we have already to being an LHS value
-		*expr.operand = std::move(*exp);
-
-		*exp = std::move(expr);
-		op   = peekToken();
+        exp = std::move(unary);
+        op  = peekToken();
 	}
 }
 
@@ -756,20 +710,16 @@ void Parser::parseExpression10(std::unique_ptr<Expression> &exp) {
 	if (op.type == Token::Exponent) {
 		op = readToken();
 
-		BinaryExpression bin;
+        auto bin = std::make_unique<BinaryExpression>();
 
-		bin.lhs = std::make_unique<Expression>();
-		bin.op  = op.type;
-		bin.rhs = std::make_unique<Expression>();
-
-		// upgrade the expression we have already to being an LHS value
-		*bin.lhs = std::move(*exp);
+        bin->lhs = std::move(exp);
+        bin->op  = op.type;
 
 		// parse the RHS expression
-		parseExpression10(bin.rhs);
+        parseExpression10(bin->rhs);
 
-		*exp = std::move(bin);
-		op   = peekToken();
+        exp = std::move(bin);
+        op  = peekToken();
 	}
 }
 
@@ -800,7 +750,7 @@ void Parser::parseExpression11(std::unique_ptr<Expression> &exp) {
  */
 void Parser::parseArrayIndex(std::unique_ptr<Expression> &exp) {
 
-	parseAtom(exp);
+    parseAtom(exp);
 
 	Token leftBracket = peekToken();
 	while (leftBracket.type == Token::LeftBracket) {
@@ -812,13 +762,12 @@ void Parser::parseArrayIndex(std::unique_ptr<Expression> &exp) {
 
         consumeRequired<MissingClosingBracket>(Token::RightBracket);
 
-		ArrayIndexExpression arrayIndex;
-		arrayIndex.array = std::make_unique<Expression>();
-		arrayIndex.index = std::move(index);
+        auto arrayIndex = std::make_unique<ArrayIndexExpression>();
 
-		*(arrayIndex.array) = std::move(*exp);
+        arrayIndex->array = std::move(exp);
+        arrayIndex->index = std::move(index);
 
-		*exp = std::move(arrayIndex);
+        exp = std::move(arrayIndex);
 
 		leftBracket = peekToken();
 	}
@@ -831,18 +780,18 @@ void Parser::parseArrayIndex(std::unique_ptr<Expression> &exp) {
  * @param exp
  */
 void Parser::parseAtom(std::unique_ptr<Expression> &exp) {
-	// var, $var, 123, "hello"
+    // var, $var, 123, "hello"
 
 	Token token = peekToken();
 
 	if (token.type == Token::Identifier || token.type == Token::Integer || token.type == Token::String) {
 		Token name = readToken();
 
-		AtomExpression atom;
-        atom.value = name.value;
-        atom.type  = name.type;
-        *exp       = atom;
-	}
+        auto atom = std::make_unique<AtomExpression>();
+        atom->value = name.value;
+        atom->type  = name.type;
+        exp         = std::move(atom);
+    }
 }
 
 /**
@@ -853,9 +802,8 @@ void Parser::parseCall(std::unique_ptr<Expression> &exp) {
 	Token leftBracket = peekToken();
 	if (leftBracket.type == Token::LeftParen) {
 
-        if(auto a = exp->get<AtomExpression>()) {
+        if(auto a = dynamic_cast<AtomExpression *>(exp.get())) {
             if(a->type == Token::Type::Identifier) {
-
 
                 // consume the left parens
                 readToken();
@@ -865,23 +813,21 @@ void Parser::parseCall(std::unique_ptr<Expression> &exp) {
                     // consume the closing parameter
                     consumeRequired<MissingClosingParen>(Token::RightParen);
 
-                    CallExpression call;
-                    call.function = std::move(exp);
+                    auto call = std::make_unique<CallExpression>();
+                    call->function = std::move(exp);
 
-                    exp  = std::make_unique<Expression>();
-                    *exp = std::move(call);
+                    exp = std::move(call);
 
                 } else {
                     std::vector<std::unique_ptr<Expression>> arguments = parseExpressionList();
 
                     consumeRequired<MissingClosingParen>(Token::RightParen);
 
-                    CallExpression call;
-                    call.function   = std::move(exp);
-                    call.parameters = std::move(arguments);
+                    auto call = std::make_unique<CallExpression>();
+                    call->function   = std::move(exp);
+                    call->parameters = std::move(arguments);
 
-                    exp  = std::make_unique<Expression>();
-                    *exp = std::move(call);
+                    exp = std::move(call);
                 }
             }
         }
@@ -897,7 +843,14 @@ std::vector<std::unique_ptr<Expression>> Parser::parseExpressionList() {
 
 	while (true) {
 		auto expr = parseExpression();
-		expressions.push_back(std::move(expr));
+
+        if(expr) {
+            expressions.push_back(std::move(expr));
+        } else {
+            if(peekToken().type == Token::Comma) {
+                throw UnexpectedComma(peekToken());
+            }
+        }
 
 		if (peekToken().type != Token::Comma) {
 			break;

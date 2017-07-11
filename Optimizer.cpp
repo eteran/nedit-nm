@@ -16,10 +16,10 @@ void fold_string_expression(AtomExpression *left, AtomExpression *right, Token::
     {
         std::string v = left->value + right->value;
 
-        AtomExpression atom;
-        atom.value  = v;
-        atom.type   = Token::Type::String;
-        *expression = atom;
+        auto atom   = std::make_unique<AtomExpression>();
+        atom->value = v;
+        atom->type  = Token::Type::String;
+        expression  = std::move(atom);
     }
         break;
     default:
@@ -35,10 +35,10 @@ void fold_numeric_expression(AtomExpression *left, AtomExpression *right, Token:
             int32_t r = std::stoi(right->value);
             int32_t v = l + r;
 
-            AtomExpression atom;
-            atom.value  = std::to_string(v);
-            atom.type   = Token::Type::Integer;
-            *expression = atom;
+            auto atom   = std::make_unique<AtomExpression>();
+            atom->value = std::to_string(v);
+            atom->type  = Token::Type::Integer;
+            expression  = std::move(atom);
         }
         break;
     case Token::Type::Sub:
@@ -47,10 +47,10 @@ void fold_numeric_expression(AtomExpression *left, AtomExpression *right, Token:
             int32_t r = std::stoi(right->value);
             int32_t v = l - r;
 
-            AtomExpression atom;
-            atom.value  = std::to_string(v);
-            atom.type   = Token::Type::Integer;
-            *expression = atom;
+            auto atom   = std::make_unique<AtomExpression>();
+            atom->value = std::to_string(v);
+            atom->type  = Token::Type::Integer;
+            expression  = std::move(atom);
         }
         break;
     case Token::Type::Mul:
@@ -59,10 +59,10 @@ void fold_numeric_expression(AtomExpression *left, AtomExpression *right, Token:
             int32_t r = std::stoi(right->value);
             int32_t v = l * r;
 
-            AtomExpression atom;
-            atom.value  = std::to_string(v);
-            atom.type   = Token::Type::Integer;
-            *expression = atom;
+            auto atom   = std::make_unique<AtomExpression>();
+            atom->value = std::to_string(v);
+            atom->type  = Token::Type::Integer;
+            expression  = std::move(atom);
         }
         break;
     case Token::Type::Div:
@@ -78,10 +78,10 @@ void fold_numeric_expression(AtomExpression *left, AtomExpression *right, Token:
 
             int32_t v = l / r;
 
-            AtomExpression atom;
-            atom.value  = std::to_string(v);
-            atom.type   = Token::Type::Integer;
-            *expression = atom;
+            auto atom   = std::make_unique<AtomExpression>();
+            atom->value = std::to_string(v);
+            atom->type  = Token::Type::Integer;
+            expression  = std::move(atom);
         }
         break;
     case Token::Type::Mod:
@@ -97,10 +97,10 @@ void fold_numeric_expression(AtomExpression *left, AtomExpression *right, Token:
 
             int32_t v = l % r;
 
-            AtomExpression atom;
-            atom.value  = std::to_string(v);
-            atom.type   = Token::Type::Integer;
-            *expression = atom;
+            auto atom   = std::make_unique<AtomExpression>();
+            atom->value = std::to_string(v);
+            atom->type  = Token::Type::Integer;
+            expression  = std::move(atom);
         }
         break;
     case Token::Type::Exponent:
@@ -109,10 +109,10 @@ void fold_numeric_expression(AtomExpression *left, AtomExpression *right, Token:
             int32_t r = std::stoi(right->value);
             int32_t v = static_cast<int32_t>(std::pow(static_cast<double>(l), static_cast<double>(r)));
 
-            AtomExpression atom;
-            atom.value  = std::to_string(v);
-            atom.type   = Token::Type::Integer;
-            *expression = atom;
+            auto atom   = std::make_unique<AtomExpression>();
+            atom->value = std::to_string(v);
+            atom->type  = Token::Type::Integer;
+            expression  = std::move(atom);
         }
         break;
     default:
@@ -124,8 +124,8 @@ void fold_binary_expression(BinaryExpression *bin, std::unique_ptr<Expression> &
     fold(bin->lhs);
     fold(bin->rhs);
 
-    if(auto left = bin->lhs->get<AtomExpression>()) {
-        if(auto right = bin->rhs->get<AtomExpression>()) {
+    if(auto left = dynamic_cast<AtomExpression *>(bin->lhs.get())) {
+        if(auto right = dynamic_cast<AtomExpression *>(bin->rhs.get())) {
             if(left->type == Token::Integer && right->type == Token::Integer) {
                 fold_numeric_expression(left, right, bin->op, expression);
             } else if(left->type == Token::String && right->type == Token::String) {
@@ -137,6 +137,7 @@ void fold_binary_expression(BinaryExpression *bin, std::unique_ptr<Expression> &
             }
         }
     }
+
 }
 
 /**
@@ -145,13 +146,13 @@ void fold_binary_expression(BinaryExpression *bin, std::unique_ptr<Expression> &
  */
 void fold(std::unique_ptr<Expression> &expression) {
 
-    if(auto bin = expression->get<BinaryExpression>()) {
+    if(auto bin = dynamic_cast<BinaryExpression *>(expression.get())) {
         fold_binary_expression(bin, expression);
-    } else if(auto call = expression->get<CallExpression>()) {
+    } else if(auto call = dynamic_cast<CallExpression *>(expression.get())) {
         for(auto &param : call->parameters) {
             fold(param);
         }
-    } else if(auto arr = expression->get<ArrayIndexExpression>()) {
+    } else if(auto arr = dynamic_cast<ArrayIndexExpression *>(expression.get())) {
         for(auto &idx : arr->index) {
             fold(idx);
         }

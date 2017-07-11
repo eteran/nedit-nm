@@ -2,7 +2,6 @@
 #ifndef TOKERNIZER_H_
 #define TOKERNIZER_H_
 
-#include "Input.h"
 #include "Token.h"
 #include <vector>
 

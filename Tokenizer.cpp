@@ -1,10 +1,12 @@
 
 #include "Tokenizer.h"
 #include "Error.h"
+#include "Input.h"
 #include <cctype>
 #include <cstring>
 #include <fstream>
 #include <string>
+#include <regex>
 
 namespace {
 

@@ -6,7 +6,6 @@
 #include "Statement.h"
 #include "Tokenizer.h"
 #include <memory>
-#include <stack>
 #include <string>
 
 class Input;
@@ -34,20 +33,20 @@ public:
     std::vector<std::unique_ptr<Expression>> parseExpressionList();
 
 private:
-	void parseExpression0(std::unique_ptr<Expression> &exp);
-	void parseExpression1(std::unique_ptr<Expression> &exp);
-	void parseExpression2(std::unique_ptr<Expression> &exp);
-	void parseExpression3(std::unique_ptr<Expression> &exp);
-	void parseExpression4(std::unique_ptr<Expression> &exp);
-	void parseExpression5(std::unique_ptr<Expression> &exp);
-	void parseExpression6(std::unique_ptr<Expression> &exp);
-	void parseExpression7(std::unique_ptr<Expression> &exp);
-	void parseExpression8(std::unique_ptr<Expression> &exp);
-	void parseExpression9(std::unique_ptr<Expression> &exp);
-	void parseExpression10(std::unique_ptr<Expression> &exp);
-	void parseExpression11(std::unique_ptr<Expression> &exp);
-	void parseAtom(std::unique_ptr<Expression> &exp);
-	void parseArrayIndex(std::unique_ptr<Expression> &exp);
+    void parseExpression0(std::unique_ptr<Expression> &exp);
+    void parseExpression1(std::unique_ptr<Expression> &exp);
+    void parseExpression2(std::unique_ptr<Expression> &exp);
+    void parseExpression3(std::unique_ptr<Expression> &exp);
+    void parseExpression4(std::unique_ptr<Expression> &exp);
+    void parseExpression5(std::unique_ptr<Expression> &exp);
+    void parseExpression6(std::unique_ptr<Expression> &exp);
+    void parseExpression7(std::unique_ptr<Expression> &exp);
+    void parseExpression8(std::unique_ptr<Expression> &exp);
+    void parseExpression9(std::unique_ptr<Expression> &exp);
+    void parseExpression10(std::unique_ptr<Expression> &exp);
+    void parseExpression11(std::unique_ptr<Expression> &exp);
+    void parseAtom(std::unique_ptr<Expression> &exp);
+    void parseArrayIndex(std::unique_ptr<Expression> &exp);
 	void parseCall(std::unique_ptr<Expression> &exp);
 
 private:

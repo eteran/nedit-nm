@@ -167,6 +167,17 @@ public:
 	}
 };
 
+class UnexpectedComma : public SyntaxError {
+public:
+    explicit UnexpectedComma(const Token &token) : SyntaxError(token) {
+    }
+
+public:
+    const char *what() const noexcept override {
+        return "UnexpectedComma";
+    }
+};
+
 class UnexpectedBracket : public SyntaxError {
 public:
 	explicit UnexpectedBracket(const Token &token) : SyntaxError(token) {

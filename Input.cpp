@@ -1,8 +1,6 @@
 
 #include "Input.h"
 #include "Error.h"
-#include <cctype>
-#include <iostream>
 
 /**
  * @brief Input::Input
@@ -136,6 +134,7 @@ bool Input::match(char ch) {
 	} else {
 		++column_;
 	}
+
 	++index_;
 	return true;
 }

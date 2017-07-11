@@ -14,6 +14,7 @@ public:
     size_t line() const {
         return line_;
     }
+
     size_t column() const {
         return column_;
     }

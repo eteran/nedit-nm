@@ -2,8 +2,6 @@ cmake_minimum_required (VERSION 3.0)
 
 project(nm CXX)
 
-find_package(Boost 1.35 REQUIRED)
-
 set(nm_SOURCES
 	Error.h
 	Expression.h
@@ -25,11 +23,9 @@ set(nm_SOURCES
 add_executable(nm ${nm_SOURCES})
 
 target_include_directories(nm PUBLIC
-	${Boost_INCLUDE_DIR}
 )
 
 target_link_libraries(nm LINK_PUBLIC
-	${Boost_LIBRARIES}
 )
 
 set_property(TARGET nm PROPERTY CXX_STANDARD 14)
