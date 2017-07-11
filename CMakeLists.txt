@@ -18,6 +18,8 @@ set(nm_SOURCES
 	Token.h
 	Tokenizer.cpp
 	Tokenizer.h
+	Optimizer.cpp
+	Optimizer.h
 )
 
 add_executable(nm ${nm_SOURCES})

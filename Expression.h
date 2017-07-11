@@ -22,7 +22,8 @@ struct UnaryExpression {
 };
 
 struct AtomExpression {
-	std::string atom;
+    std::string value;
+    Token::Type type;
 };
 
 struct CallExpression {

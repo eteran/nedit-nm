@@ -839,8 +839,9 @@ void Parser::parseAtom(std::unique_ptr<Expression> &exp) {
 		Token name = readToken();
 
 		AtomExpression atom;
-		atom.atom = name.value;
-		*exp      = atom;
+        atom.value = name.value;
+        atom.type  = name.type;
+        *exp       = atom;
 	}
 }
 
@@ -852,32 +853,38 @@ void Parser::parseCall(std::unique_ptr<Expression> &exp) {
 	Token leftBracket = peekToken();
 	if (leftBracket.type == Token::LeftParen) {
 
-		// consume the left parens
-		readToken();
+        if(auto a = exp->get<AtomExpression>()) {
+            if(a->type == Token::Type::Identifier) {
 
-		if (peekToken().type == Token::RightParen) {
-			// empty parameter list
-			// consume the closing parameter
-            consumeRequired<MissingClosingParen>(Token::RightParen);
 
-			CallExpression call;
-			call.function = std::move(exp);
+                // consume the left parens
+                readToken();
 
-			exp  = std::make_unique<Expression>();
-			*exp = std::move(call);
+                if (peekToken().type == Token::RightParen) {
+                    // empty parameter list
+                    // consume the closing parameter
+                    consumeRequired<MissingClosingParen>(Token::RightParen);
 
-		} else {
-			std::vector<std::unique_ptr<Expression>> arguments = parseExpressionList();
+                    CallExpression call;
+                    call.function = std::move(exp);
 
-            consumeRequired<MissingClosingParen>(Token::RightParen);
+                    exp  = std::make_unique<Expression>();
+                    *exp = std::move(call);
 
-			CallExpression call;
-			call.function   = std::move(exp);
-			call.parameters = std::move(arguments);
+                } else {
+                    std::vector<std::unique_ptr<Expression>> arguments = parseExpressionList();
 
-			exp  = std::make_unique<Expression>();
-			*exp = std::move(call);
-		}
+                    consumeRequired<MissingClosingParen>(Token::RightParen);
+
+                    CallExpression call;
+                    call.function   = std::move(exp);
+                    call.parameters = std::move(arguments);
+
+                    exp  = std::make_unique<Expression>();
+                    *exp = std::move(call);
+                }
+            }
+        }
 	}
 }
 

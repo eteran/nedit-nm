@@ -1,6 +1,7 @@
 
 #include "Error.h"
 #include "Parser.h"
+#include "Optimizer.h"
 #include <iostream>
 #include <map>
 
@@ -29,21 +30,10 @@ int main(int argc, char *argv[]) {
 			statements.push_back(std::move(statement));
 		}
 
-#if 1
-		auto it = std::remove_if(statements.begin(), statements.end(), [](const std::unique_ptr<Statement> &stmt) {
-			if (auto expr = dynamic_cast<ExpressionStatement *>(stmt.get())) {
-				if (!expr->expression) {
-					return true;
-				}
-			}
+        Optimizer::prune_empty_statements(statements);
+        Optimizer::fold_constant_expressions(statements);
 
-			return false;
-		});
-
-		statements.erase(it, statements.end());
-#endif
-
-		return 0;
+        return 0;
 #if 0
 	} catch (const SyntaxError &ex) {
 		std::cerr << ex.what() << std::endl;
