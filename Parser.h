@@ -65,8 +65,8 @@ private:
 
 private:
 	Tokenizer tokenizer_;
-	size_t    index_;
-	bool      in_function_;
+    size_t    index_       = 0;
+    bool      in_function_ = false;
 };
 
 #endif

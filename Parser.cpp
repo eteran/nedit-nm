@@ -10,7 +10,7 @@
 /**
  * @brief Parser::Parser
  */
-Parser::Parser(const std::string &filename) : tokenizer_(filename), index_(0), in_function_(false) {
+Parser::Parser(const std::string &filename) : tokenizer_(filename) {
 }
 
 /**
