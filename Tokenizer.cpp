@@ -40,8 +40,9 @@ Tokenizer::Tokenizer(const std::string &filename) {
 		throw FileNotFound(filename);
 	}
 
-	auto  source = std::string(std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{});
-	Input input(filename, std::move(source));
+    auto source = std::string(std::istreambuf_iterator<char>{file}, {});
+
+    Input input(std::move(source));
 
 	while (!input.eof()) {
 
@@ -189,6 +190,9 @@ Tokenizer::Tokenizer(const std::string &filename) {
 
 				while ((ch = input.read()) != '"') {
 					if (ch == '\\') {
+
+                        Input backslash = input;
+
 						ch = input.read();
 						switch (ch) {
 						case '\n':
@@ -214,6 +218,15 @@ Tokenizer::Tokenizer(const std::string &filename) {
                                 }
 
                                 ch = static_cast<char>(std::stoi(hex, nullptr, 16));
+
+                                // NOTE(eteran): this is a quirk in the NEdit macro language
+                                // which attempts to actively prevent literal NULs in strings
+                                // by simply ignoring the leading backslash and reparsing
+                                if(ch == 0) {
+                                    input = backslash;
+                                    continue;
+                                }
+
 							} catch (...) {
                                 throw InvalidEscapeSequence(Context(input));
 							}
@@ -234,6 +247,15 @@ Tokenizer::Tokenizer(const std::string &filename) {
                                 }
 
                                 ch = static_cast<char>(std::stoi(oct, nullptr, 8));
+
+                                // NOTE(eteran): this is a quirk in the NEdit macro language
+                                // which attempts to actively prevent literal NULs in strings
+                                // by simply ignoring the leading backslash and reparsing
+                                if(ch == 0) {
+                                    input = backslash;
+                                    continue;
+                                }
+
 							} catch (...) {
                                 throw InvalidEscapeSequence(Context(input));
 							}

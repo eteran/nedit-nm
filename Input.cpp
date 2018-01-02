@@ -7,7 +7,7 @@
  * @param source
  * @param input
  */
-Input::Input(std::string source, std::string input) : source_(std::move(source)), input_(std::move(input)), index_(0), line_(1), column_(1) {
+Input::Input(std::string input) : input_(std::move(input)) {
 }
 
 /**

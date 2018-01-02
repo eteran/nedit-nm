@@ -8,7 +8,7 @@
 
 class Input {
 public:
-	Input(std::string source, std::string input);
+    Input(std::string input);
 
 public:
 	bool eof() const;
@@ -23,11 +23,10 @@ public:
 	size_t column() const;
 
 private:
-	const std::string source_;
-	const std::string input_;
-	size_t            index_;
-	size_t            line_;
-	size_t            column_;
+    std::string input_; // TODO(eteran): would be better as string_view
+    size_t      index_  = 0;
+    size_t      line_   = 1;
+    size_t      column_ = 1;
 };
 
 #endif
