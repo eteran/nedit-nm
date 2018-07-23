@@ -8,7 +8,7 @@
 
 class Input {
 public:
-    Input(std::string input);
+	explicit Input(std::string input);
 
 public:
 	bool eof() const;
