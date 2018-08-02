@@ -208,6 +208,4 @@ void prune_empty_statements(std::vector<std::unique_ptr<Statement>> &statements)
     statements.erase(it, statements.end());
 }
 
-
-
 }

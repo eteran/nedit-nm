@@ -1,1 +1,1 @@
-# nm
+# nedit-nm

@@ -7,7 +7,7 @@ class Input;
 
 class Context {
 public:
-	Context();
+	Context() = default;
     explicit Context(const Input &input);
 
 public:
@@ -20,8 +20,8 @@ public:
     }
 
 private:
-    size_t line_;
-    size_t column_;
+    size_t line_   = 0;
+    size_t column_ = 0;
 };
 
 #endif

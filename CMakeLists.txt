@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 3.0)
 
-project(nm CXX)
+project(nedit-nm CXX)
 
-set(nm_SOURCES
+add_executable(nedit-nm 
 	Error.h
 	Expression.h
 	Context.h
@@ -20,15 +20,7 @@ set(nm_SOURCES
 	Optimizer.h
 )
 
-add_executable(nm ${nm_SOURCES})
-
-target_include_directories(nm PUBLIC
-)
-
-target_link_libraries(nm LINK_PUBLIC
-)
-
-set_property(TARGET nm PROPERTY CXX_STANDARD 14)
+set_property(TARGET nedit-nm PROPERTY CXX_STANDARD 14)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -W -Wall -Wmissing-field-initializers -Wunused -Wshadow")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3")

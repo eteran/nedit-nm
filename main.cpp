@@ -27,14 +27,14 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			statements.push_back(std::move(statement));
+			statements.emplace_back(std::move(statement));
 		}
 
         Optimizer::prune_empty_statements(statements);
         Optimizer::fold_constant_expressions(statements);
 
         return 0;
-#if 0
+#if 1
 	} catch (const SyntaxError &ex) {
 		std::cerr << ex.what() << std::endl;
 		std::cerr << "On line:   " << ex.line() << std::endl;

@@ -61,13 +61,12 @@ public:
 	};
 
 public:
-	Token() : type(Invalid) {
-	}
+	Token() = default;
 
 	Token(Type t, const std::string &v, const Context &c) : type(t), value(v), context(c) {
 	}
 
-	Type        type;
+	Type        type = Invalid;
 	std::string value;
 	Context     context;
 };
