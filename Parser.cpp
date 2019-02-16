@@ -762,9 +762,17 @@ void Parser::parseArrayIndex(std::unique_ptr<Expression> &exp) {
 
         consumeRequired<MissingClosingBracket>(Token::RightBracket);
 
-        auto arrayIndex = std::make_unique<ArrayIndexExpression>();
+		auto arrayIndex = std::make_unique<ArrayIndexExpression>();
 
-        arrayIndex->array = std::move(exp);
+		// make note that this is an array, not just an ordinary identifier
+		// i have no idea how we would handle something like:
+		// f()[1]
+		// it may require something much more clever
+		if(auto arr = dynamic_cast<AtomExpression *>(exp.get())) {
+			arr->type = Token::ArrayIdentifier;
+		}
+
+		arrayIndex->array = std::move(exp);
         arrayIndex->index = std::move(index);
 
         exp = std::move(arrayIndex);

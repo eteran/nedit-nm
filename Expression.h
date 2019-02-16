@@ -7,9 +7,6 @@
 #include <vector>
 
 struct Expression {
-protected:
-    Expression() = default;
-public:
     virtual ~Expression() = default;
 };
 
@@ -36,7 +33,7 @@ struct CallExpression : public Expression {
 };
 
 struct ArrayIndexExpression : public Expression {
-    std::unique_ptr<Expression>              array;
+	std::unique_ptr<Expression>              array;
     std::vector<std::unique_ptr<Expression>> index;
 };
 
