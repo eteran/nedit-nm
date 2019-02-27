@@ -22,6 +22,3 @@ add_executable(nedit-nm
 
 set_property(TARGET nedit-nm PROPERTY CXX_STANDARD 14)
 set_property(TARGET nedit-nm PROPERTY CXX_EXTENSIONS OFF)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -W -Wall -Wmissing-field-initializers -Wunused -Wshadow")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3")
