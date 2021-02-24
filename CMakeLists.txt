@@ -7,8 +7,8 @@ add_executable(nedit-nm
 	Expression.h
 	Context.h
 	Context.cpp
-	Input.cpp
-	Input.h
+	Reader.cpp
+	Reader.h
 	main.cpp
 	Parser.cpp
 	Parser.h
@@ -18,6 +18,8 @@ add_executable(nedit-nm
 	Tokenizer.h
 	Optimizer.cpp
 	Optimizer.h
+	CodeGenerator.cpp
+	CodeGenerator.h
 )
 
 set_property(TARGET nedit-nm PROPERTY CXX_STANDARD 14)

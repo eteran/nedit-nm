@@ -2,8 +2,8 @@
 #ifndef OPTIMIZER_H_
 #define OPTIMIZER_H_
 
-#include <vector>
 #include <memory>
+#include <vector>
 class Statement;
 
 namespace Optimizer {

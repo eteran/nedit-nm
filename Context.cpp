@@ -1,10 +1,11 @@
 
 #include "Context.h"
-#include "Input.h"
+#include "Reader.h"
 
 /**
  * @brief Context::Context
  * @param input
  */
-Context::Context(const Input &input) : line_(input.line()), column_(input.column()) {
+Context::Context(const Reader &reader)
+	: line_(reader.line()), column_(reader.column()) {
 }

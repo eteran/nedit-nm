@@ -16,7 +16,8 @@ public:
 
 class FileNotFound : public Error {
 public:
-	explicit FileNotFound(const std::string &filename) : filename_(filename) {
+	explicit FileNotFound(const std::string &filename)
+		: filename_(filename) {
 	}
 
 public:
@@ -34,7 +35,8 @@ private:
 
 class SyntaxError : public Error {
 public:
-	explicit SyntaxError(const Token &token) : token_(token) {
+	explicit SyntaxError(const Token &token)
+		: token_(token) {
 	}
 
 public:
@@ -44,10 +46,10 @@ public:
 
 public:
 	size_t line() const {
-        return token_.context.line();
+		return token_.context.line();
 	}
 	size_t column() const {
-        return token_.context.column();
+		return token_.context.column();
 	}
 	const Token &token() const {
 		return token_;
@@ -59,7 +61,8 @@ private:
 
 class FunctionDefinedWithinFunction : public SyntaxError {
 public:
-	explicit FunctionDefinedWithinFunction(const Token &token) : SyntaxError(token) {
+	explicit FunctionDefinedWithinFunction(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -70,7 +73,8 @@ public:
 
 class MissingIdentifier : public SyntaxError {
 public:
-	explicit MissingIdentifier(const Token &token) : SyntaxError(token) {
+	explicit MissingIdentifier(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -81,7 +85,8 @@ public:
 
 class MissingClosingBracket : public SyntaxError {
 public:
-	explicit MissingClosingBracket(const Token &token) : SyntaxError(token) {
+	explicit MissingClosingBracket(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -92,7 +97,8 @@ public:
 
 class MissingClosingBrace : public SyntaxError {
 public:
-	explicit MissingClosingBrace(const Token &token) : SyntaxError(token) {
+	explicit MissingClosingBrace(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -103,7 +109,8 @@ public:
 
 class MissingOpenBrace : public SyntaxError {
 public:
-	explicit MissingOpenBrace(const Token &token) : SyntaxError(token) {
+	explicit MissingOpenBrace(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -114,7 +121,8 @@ public:
 
 class MissingClosingParen : public SyntaxError {
 public:
-	explicit MissingClosingParen(const Token &token) : SyntaxError(token) {
+	explicit MissingClosingParen(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -125,7 +133,8 @@ public:
 
 class MissingOpenParen : public SyntaxError {
 public:
-	explicit MissingOpenParen(const Token &token) : SyntaxError(token) {
+	explicit MissingOpenParen(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -136,7 +145,8 @@ public:
 
 class MissingNewline : public SyntaxError {
 public:
-	explicit MissingNewline(const Token &token) : SyntaxError(token) {
+	explicit MissingNewline(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -147,7 +157,8 @@ public:
 
 class MissingSemicolon : public SyntaxError {
 public:
-	explicit MissingSemicolon(const Token &token) : SyntaxError(token) {
+	explicit MissingSemicolon(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -158,7 +169,8 @@ public:
 
 class UnexpectedBrace : public SyntaxError {
 public:
-	explicit UnexpectedBrace(const Token &token) : SyntaxError(token) {
+	explicit UnexpectedBrace(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -169,18 +181,20 @@ public:
 
 class UnexpectedComma : public SyntaxError {
 public:
-    explicit UnexpectedComma(const Token &token) : SyntaxError(token) {
-    }
+	explicit UnexpectedComma(const Token &token)
+		: SyntaxError(token) {
+	}
 
 public:
-    const char *what() const noexcept override {
-        return "UnexpectedComma";
-    }
+	const char *what() const noexcept override {
+		return "UnexpectedComma";
+	}
 };
 
 class UnexpectedBracket : public SyntaxError {
 public:
-	explicit UnexpectedBracket(const Token &token) : SyntaxError(token) {
+	explicit UnexpectedBracket(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -191,7 +205,8 @@ public:
 
 class UnexpectedKeyword : public SyntaxError {
 public:
-	explicit UnexpectedKeyword(const Token &token) : SyntaxError(token) {
+	explicit UnexpectedKeyword(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -202,7 +217,8 @@ public:
 
 class UnexpectedParen : public SyntaxError {
 public:
-	explicit UnexpectedParen(const Token &token) : SyntaxError(token) {
+	explicit UnexpectedParen(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -213,7 +229,8 @@ public:
 
 class UnexpectedStringConstant : public SyntaxError {
 public:
-	explicit UnexpectedStringConstant(const Token &token) : SyntaxError(token) {
+	explicit UnexpectedStringConstant(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -224,7 +241,8 @@ public:
 
 class UnexpectedNumericConstant : public SyntaxError {
 public:
-	explicit UnexpectedNumericConstant(const Token &token) : SyntaxError(token) {
+	explicit UnexpectedNumericConstant(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -235,7 +253,8 @@ public:
 
 class UnexpectedIdentifier : public SyntaxError {
 public:
-	explicit UnexpectedIdentifier(const Token &token) : SyntaxError(token) {
+	explicit UnexpectedIdentifier(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -246,7 +265,8 @@ public:
 
 class InvalidDelete : public SyntaxError {
 public:
-	explicit InvalidDelete(const Token &token) : SyntaxError(token) {
+	explicit InvalidDelete(const Token &token)
+		: SyntaxError(token) {
 	}
 
 public:
@@ -257,7 +277,8 @@ public:
 
 class TokenizationError : public Error {
 public:
-	explicit TokenizationError(const Context &context) : context_(context) {
+	explicit TokenizationError(const Context &context)
+		: context_(context) {
 	}
 
 public:
@@ -276,7 +297,8 @@ private:
 
 class InvalidIdentifier : public TokenizationError {
 public:
-	explicit InvalidIdentifier(const Context &context) : TokenizationError(context) {
+	explicit InvalidIdentifier(const Context &context)
+		: TokenizationError(context) {
 	}
 
 public:
@@ -287,7 +309,8 @@ public:
 
 class InvalidNumericConstant : public TokenizationError {
 public:
-	explicit InvalidNumericConstant(const Context &context) : TokenizationError(context) {
+	explicit InvalidNumericConstant(const Context &context)
+		: TokenizationError(context) {
 	}
 
 public:
@@ -298,7 +321,8 @@ public:
 
 class InvalidEscapeSequence : public TokenizationError {
 public:
-	explicit InvalidEscapeSequence(const Context &context) : TokenizationError(context) {
+	explicit InvalidEscapeSequence(const Context &context)
+		: TokenizationError(context) {
 	}
 
 public:

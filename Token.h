@@ -7,9 +7,9 @@
 
 class Token {
 public:
-    enum Type : uint8_t {
+	enum Type : uint8_t {
 		Invalid,
-		
+
 		Add,
 		Sub,
 		Mul,
@@ -20,7 +20,7 @@ public:
 		Decrement,
 		LeftBrace,
 		RightBrace,
-		
+
 		LeftParen,
 		RightParen,
 		LeftBracket,
@@ -31,7 +31,7 @@ public:
 		MulAssign,
 		DivAssign,
 		ModAssign,
-		
+
 		Exponent,
 		LogicalAnd,
 		LogicalOr,
@@ -42,7 +42,7 @@ public:
 		GreaterThanOrEqual,
 		GreaterThan,
 		Equal,
-		
+
 		NotEqual,
 		Assign,
 		While,
@@ -53,7 +53,7 @@ public:
 		Newline,
 		If,
 		In,
-		
+
 		Else,
 		Switch,
 		Break,
@@ -69,12 +69,13 @@ public:
 public:
 	Token() = default;
 
-	Token(Type t, const std::string &v, const Context &c) : type(t), value(v), context(c) {
+	Token(Type t, const std::string &v, const Context &c)
+		: type(t), value(v), context(c) {
 	}
 
-	Type        type = Invalid;
+	Type type = Invalid;
 	std::string value;
-	Context     context;
+	Context context;
 };
 
 #endif

@@ -1,17 +1,17 @@
 
 #include "Tokenizer.h"
 #include "Error.h"
-#include "Input.h"
+#include "Reader.h"
 #include <cctype>
 #include <cstring>
 #include <fstream>
-#include <string>
 #include <regex>
+#include <string>
 
 namespace {
 
-const std::regex  integer_regex(R"(^(0|[1-9][0-9]*))");
-const std::regex  identifier_regex(R"(^[_a-zA-Z$][_a-zA-Z0-9]*)");
+const std::regex integer_regex(R"(^(0|[1-9][0-9]*))");
+const std::regex identifier_regex(R"(^[_a-zA-Z$][_a-zA-Z0-9]*)");
 const std::string whitespace(" \f\r\t\b");
 
 /**
@@ -31,8 +31,8 @@ bool isodigit(int ch) {
  */
 Tokenizer::Tokenizer(const std::string &filename) {
 
-	using std::isdigit;
 	using std::isalpha;
+	using std::isdigit;
 	using std::isxdigit;
 
 	std::ifstream file(filename);
@@ -40,18 +40,18 @@ Tokenizer::Tokenizer(const std::string &filename) {
 		throw FileNotFound(filename);
 	}
 
-    auto source = std::string(std::istreambuf_iterator<char>{file}, {});
+	auto source = std::string(std::istreambuf_iterator<char>{file}, {});
 
-    Input input(std::move(source));
+	Reader reader(source);
 
-	while (!input.eof()) {
+	while (!reader.eof()) {
 
 		// consume whitespace and comments until the next token
 		while (true) {
-			input.consume(whitespace);
-			if (input.match('#')) {
-				while (input.peek() != '\n') {
-					input.read();
+			reader.consume(whitespace);
+			if (reader.match('#')) {
+				while (reader.peek() != '\n') {
+					reader.read();
 				}
 			} else {
 				break;
@@ -60,175 +60,197 @@ Tokenizer::Tokenizer(const std::string &filename) {
 
 		// NOTE(eteran): these should be ordered by length so that shorter tokens
 		// don't get prioritized over longer ones
-		if (input.match("\\\n")) {
+		if (reader.match("\\\n")) {
 			continue;
-		} else if (input.match("++")) {
-			tokens_.emplace_back(Token::Increment, "++", Context(input));
-		} else if (input.match("--")) {
-			tokens_.emplace_back(Token::Decrement, "--", Context(input));
-		} else if (input.match("<=")) {
-			tokens_.emplace_back(Token::LessThanOrEqual, "<=", Context(input));
-		} else if (input.match(">=")) {
-			tokens_.emplace_back(Token::GreaterThanOrEqual, ">=", Context(input));
-		} else if (input.match("==")) {
-			tokens_.emplace_back(Token::Equal, "==", Context(input));
-		} else if (input.match("!=")) {
-			tokens_.emplace_back(Token::NotEqual, "!=", Context(input));
-		} else if (input.match("+=")) {
-			tokens_.emplace_back(Token::AddAssign, "+=", Context(input));
-		} else if (input.match("-=")) {
-			tokens_.emplace_back(Token::SubAssign, "-=", Context(input));
-		} else if (input.match("*=")) {
-			tokens_.emplace_back(Token::MulAssign, "*=", Context(input));
-		} else if (input.match("/=")) {
-			tokens_.emplace_back(Token::DivAssign, "/=", Context(input));
-		} else if (input.match("%=")) {
-			tokens_.emplace_back(Token::ModAssign, "%=", Context(input));
-		} else if (input.match("&&")) {
-			tokens_.emplace_back(Token::LogicalAnd, "&&", Context(input));
-		} else if (input.match("||")) {
-			tokens_.emplace_back(Token::LogicalOr, "||", Context(input));
-		} else if (input.match('{')) {
-			tokens_.emplace_back(Token::LeftBrace, "{", Context(input));
-		} else if (input.match('}')) {
-			tokens_.emplace_back(Token::RightBrace, "}", Context(input));
-		} else if (input.match(')')) {
-			tokens_.emplace_back(Token::RightParen, ")", Context(input));
-		} else if (input.match('(')) {
-			tokens_.emplace_back(Token::LeftParen, "(", Context(input));
-		} else if (input.match(']')) {
-			tokens_.emplace_back(Token::RightBracket, "]", Context(input));
-		} else if (input.match('[')) {
-			tokens_.emplace_back(Token::LeftBracket, "[", Context(input));
-		} else if (input.match(';')) {
-			tokens_.emplace_back(Token::Semicolon, ";", Context(input));
-		} else if (input.match(',')) {
-			tokens_.emplace_back(Token::Comma, ",", Context(input));
-		} else if (input.match('\n')) {
-			tokens_.emplace_back(Token::Newline, "\n", Context(input));
-		} else if (input.match('<')) {
-			tokens_.emplace_back(Token::LessThan, "<", Context(input));
-		} else if (input.match('>')) {
-			tokens_.emplace_back(Token::GreaterThan, ">", Context(input));
-		} else if (input.match('&')) {
-			tokens_.emplace_back(Token::BinaryAnd, "&", Context(input));
-		} else if (input.match('|')) {
-			tokens_.emplace_back(Token::BinaryOr, "|", Context(input));
-		} else if (input.match('!')) {
-			tokens_.emplace_back(Token::Not, "!", Context(input));
-		} else if (input.match('=')) {
-			tokens_.emplace_back(Token::Assign, "=", Context(input));
-		} else if (input.match('+')) {
-			tokens_.emplace_back(Token::Add, "+", Context(input));
-		} else if (input.match('-')) {
-			tokens_.emplace_back(Token::Sub, "-", Context(input));
-		} else if (input.match('*')) {
-			tokens_.emplace_back(Token::Mul, "*", Context(input));
-		} else if (input.match('/')) {
-			tokens_.emplace_back(Token::Div, "/", Context(input));
-		} else if (input.match('%')) {
-			tokens_.emplace_back(Token::Mod, "%", Context(input));
-		} else if (input.match('^')) {
-			tokens_.emplace_back(Token::Exponent, "^", Context(input));
+		} else if (reader.match("++")) {
+			tokens_.emplace_back(Token::Increment, "++", Context(reader));
+		} else if (reader.match("--")) {
+			tokens_.emplace_back(Token::Decrement, "--", Context(reader));
+		} else if (reader.match("<=")) {
+			tokens_.emplace_back(Token::LessThanOrEqual, "<=", Context(reader));
+		} else if (reader.match(">=")) {
+			tokens_.emplace_back(Token::GreaterThanOrEqual, ">=", Context(reader));
+		} else if (reader.match("==")) {
+			tokens_.emplace_back(Token::Equal, "==", Context(reader));
+		} else if (reader.match("!=")) {
+			tokens_.emplace_back(Token::NotEqual, "!=", Context(reader));
+		} else if (reader.match("+=")) {
+			tokens_.emplace_back(Token::AddAssign, "+=", Context(reader));
+		} else if (reader.match("-=")) {
+			tokens_.emplace_back(Token::SubAssign, "-=", Context(reader));
+		} else if (reader.match("*=")) {
+			tokens_.emplace_back(Token::MulAssign, "*=", Context(reader));
+		} else if (reader.match("/=")) {
+			tokens_.emplace_back(Token::DivAssign, "/=", Context(reader));
+		} else if (reader.match("%=")) {
+			tokens_.emplace_back(Token::ModAssign, "%=", Context(reader));
+		} else if (reader.match("&&")) {
+			tokens_.emplace_back(Token::LogicalAnd, "&&", Context(reader));
+		} else if (reader.match("||")) {
+			tokens_.emplace_back(Token::LogicalOr, "||", Context(reader));
+		} else if (reader.match('{')) {
+			tokens_.emplace_back(Token::LeftBrace, "{", Context(reader));
+		} else if (reader.match('}')) {
+			tokens_.emplace_back(Token::RightBrace, "}", Context(reader));
+		} else if (reader.match(')')) {
+			tokens_.emplace_back(Token::RightParen, ")", Context(reader));
+		} else if (reader.match('(')) {
+			tokens_.emplace_back(Token::LeftParen, "(", Context(reader));
+		} else if (reader.match(']')) {
+			tokens_.emplace_back(Token::RightBracket, "]", Context(reader));
+		} else if (reader.match('[')) {
+			tokens_.emplace_back(Token::LeftBracket, "[", Context(reader));
+		} else if (reader.match(';')) {
+			tokens_.emplace_back(Token::Semicolon, ";", Context(reader));
+		} else if (reader.match(',')) {
+			tokens_.emplace_back(Token::Comma, ",", Context(reader));
+		} else if (reader.match('\n')) {
+			tokens_.emplace_back(Token::Newline, "\n", Context(reader));
+		} else if (reader.match('<')) {
+			tokens_.emplace_back(Token::LessThan, "<", Context(reader));
+		} else if (reader.match('>')) {
+			tokens_.emplace_back(Token::GreaterThan, ">", Context(reader));
+		} else if (reader.match('&')) {
+			tokens_.emplace_back(Token::BinaryAnd, "&", Context(reader));
+		} else if (reader.match('|')) {
+			tokens_.emplace_back(Token::BinaryOr, "|", Context(reader));
+		} else if (reader.match('!')) {
+			tokens_.emplace_back(Token::Not, "!", Context(reader));
+		} else if (reader.match('=')) {
+			tokens_.emplace_back(Token::Assign, "=", Context(reader));
+		} else if (reader.match('+')) {
+			tokens_.emplace_back(Token::Add, "+", Context(reader));
+		} else if (reader.match('-')) {
+			tokens_.emplace_back(Token::Sub, "-", Context(reader));
+		} else if (reader.match('*')) {
+			tokens_.emplace_back(Token::Mul, "*", Context(reader));
+		} else if (reader.match('/')) {
+			tokens_.emplace_back(Token::Div, "/", Context(reader));
+		} else if (reader.match('%')) {
+			tokens_.emplace_back(Token::Mod, "%", Context(reader));
+		} else if (reader.match('^')) {
+			tokens_.emplace_back(Token::Exponent, "^", Context(reader));
 		} else {
 			// identifiers/keywords
-			char ch = input.peek();
+			char ch = reader.peek();
 			if (isdigit(ch)) {
 
-				std::string number;
-				if (!input.match(integer_regex, &number)) {
-					throw InvalidNumericConstant(Context(input));
+				Reader::optional<std::string> number = reader.match(integer_regex);
+				if (!number) {
+					throw InvalidNumericConstant(Context(reader));
 				}
 
 				// make sure that this is a valid integer that won't overflow
 				// when converted to an integer
 				try {
-                    (void)std::stoi(number, nullptr, 10);
+					(void)std::stoi(*number, nullptr, 10);
 				} catch (const std::out_of_range &ex) {
 					(void)ex;
-					throw InvalidNumericConstant(Context(input));
+					throw InvalidNumericConstant(Context(reader));
 				}
 
-				tokens_.emplace_back(Token::Integer, number, Context(input));
+				tokens_.emplace_back(Token::Integer, *number, Context(reader));
 			} else if (isalpha(ch) || ch == '_' || ch == '$') {
 
-				std::string identifier;
-				if (!input.match(identifier_regex, &identifier)) {
-					throw InvalidIdentifier(Context(input));
+				Reader::optional<std::string> identifier = reader.match(identifier_regex);
+				if (!identifier) {
+					throw InvalidIdentifier(Context(reader));
 				}
 
-				if (identifier == "while") {
-					tokens_.emplace_back(Token::While, identifier, Context(input));
-				} else if (identifier == "define") {
-					tokens_.emplace_back(Token::Define, identifier, Context(input));
-				} else if (identifier == "in") {
-					tokens_.emplace_back(Token::In, identifier, Context(input));
-				} else if (identifier == "for") {
-					tokens_.emplace_back(Token::For, identifier, Context(input));
-				} else if (identifier == "delete") {
-					tokens_.emplace_back(Token::Delete, identifier, Context(input));
-				} else if (identifier == "if") {
-					tokens_.emplace_back(Token::If, identifier, Context(input));
-				} else if (identifier == "else") {
-					tokens_.emplace_back(Token::Else, identifier, Context(input));
-				} else if (identifier == "switch") {
-					tokens_.emplace_back(Token::Switch, identifier, Context(input));
-				} else if (identifier == "break") {
-					tokens_.emplace_back(Token::Break, identifier, Context(input));
-				} else if (identifier == "continue") {
-					tokens_.emplace_back(Token::Continue, identifier, Context(input));
-				} else if (identifier == "return") {
-					tokens_.emplace_back(Token::Return, identifier, Context(input));
+				if (*identifier == "while") {
+					tokens_.emplace_back(Token::While, *identifier, Context(reader));
+				} else if (*identifier == "define") {
+					tokens_.emplace_back(Token::Define, *identifier, Context(reader));
+				} else if (*identifier == "in") {
+					tokens_.emplace_back(Token::In, *identifier, Context(reader));
+				} else if (*identifier == "for") {
+					tokens_.emplace_back(Token::For, *identifier, Context(reader));
+				} else if (*identifier == "delete") {
+					tokens_.emplace_back(Token::Delete, *identifier, Context(reader));
+				} else if (*identifier == "if") {
+					tokens_.emplace_back(Token::If, *identifier, Context(reader));
+				} else if (*identifier == "else") {
+					tokens_.emplace_back(Token::Else, *identifier, Context(reader));
+				} else if (*identifier == "switch") {
+					tokens_.emplace_back(Token::Switch, *identifier, Context(reader));
+				} else if (*identifier == "break") {
+					tokens_.emplace_back(Token::Break, *identifier, Context(reader));
+				} else if (*identifier == "continue") {
+					tokens_.emplace_back(Token::Continue, *identifier, Context(reader));
+				} else if (*identifier == "return") {
+					tokens_.emplace_back(Token::Return, *identifier, Context(reader));
 				} else {
-					tokens_.emplace_back(Token::Identifier, identifier, Context(input));
+					tokens_.emplace_back(Token::Identifier, *identifier, Context(reader));
 				}
 			} else if (ch == '"') {
 				std::string string;
 
 				// consume the leading quote
-				input.read();
+				reader.read();
 
-				while ((ch = input.read()) != '"') {
+				while ((ch = reader.read()) != '"') {
 					if (ch == '\\') {
 
-                        Input backslash = input;
+						Reader backslash = reader;
 
-						ch = input.read();
+						ch = reader.read();
 						switch (ch) {
 						case '\n':
 							continue; // NOTE(eteran): support escaping a literal newline in the middle of a string
-                        case '\'': ch = '\'';  break;
-                        case '\"': ch = '\"';  break;
-                        case '\\': ch = '\\';  break;
-                        case 'a': ch = '\a';   break;
-                        case 'b': ch = '\b';   break;
-                        case 'f': ch = '\f';   break;
-                        case 'n': ch = '\n';   break;
-                        case 'r': ch = '\r';   break;
-                        case 't': ch = '\t';   break;
-                        case 'v': ch = '\v';   break;
-                        case 'e': ch = '\x1b'; break;
-                        case 'x':
-                        case 'X':
-                            try {
-                                std::string hex;
+						case '\'':
+							ch = '\'';
+							break;
+						case '\"':
+							ch = '\"';
+							break;
+						case '\\':
+							ch = '\\';
+							break;
+						case 'a':
+							ch = '\a';
+							break;
+						case 'b':
+							ch = '\b';
+							break;
+						case 'f':
+							ch = '\f';
+							break;
+						case 'n':
+							ch = '\n';
+							break;
+						case 'r':
+							ch = '\r';
+							break;
+						case 't':
+							ch = '\t';
+							break;
+						case 'v':
+							ch = '\v';
+							break;
+						case 'e':
+							ch = '\x1b';
+							break;
+						case 'x':
+						case 'X':
+							try {
+								std::string hex;
 
-                                while (isxdigit(input.peek())) {
-                                    hex.push_back(input.read());
-                                }
+								while (isxdigit(reader.peek())) {
+									hex.push_back(reader.read());
+								}
 
-                                ch = static_cast<char>(std::stoi(hex, nullptr, 16));
+								ch = static_cast<char>(std::stoi(hex, nullptr, 16));
 
-                                // NOTE(eteran): this is a quirk in the NEdit macro language
-                                // which attempts to actively prevent literal NULs in strings
-                                // by simply ignoring the leading backslash and reparsing
-                                if(ch == 0) {
-                                    input = backslash;
-                                    continue;
-                                }
+								// NOTE(eteran): this is a quirk in the NEdit macro language
+								// which attempts to actively prevent literal NULs in strings
+								// by simply ignoring the leading backslash and reparsing
+								if (ch == 0) {
+									reader = backslash;
+									continue;
+								}
 
 							} catch (...) {
-                                throw InvalidEscapeSequence(Context(input));
+								throw InvalidEscapeSequence(Context(reader));
 							}
 							break;
 						case '0':
@@ -238,40 +260,40 @@ Tokenizer::Tokenizer(const std::string &filename) {
 						case '4':
 						case '5':
 						case '6':
-                        case '7':
+						case '7':
 							try {
-                                std::string oct = {ch};
+								std::string oct = {ch};
 
-                                while (isodigit(input.peek())) {
-                                    oct.push_back(input.read());
-                                }
+								while (isodigit(reader.peek())) {
+									oct.push_back(reader.read());
+								}
 
-                                ch = static_cast<char>(std::stoi(oct, nullptr, 8));
+								ch = static_cast<char>(std::stoi(oct, nullptr, 8));
 
-                                // NOTE(eteran): this is a quirk in the NEdit macro language
-                                // which attempts to actively prevent literal NULs in strings
-                                // by simply ignoring the leading backslash and reparsing
-                                if(ch == 0) {
-                                    input = backslash;
-                                    continue;
-                                }
+								// NOTE(eteran): this is a quirk in the NEdit macro language
+								// which attempts to actively prevent literal NULs in strings
+								// by simply ignoring the leading backslash and reparsing
+								if (ch == 0) {
+									reader = backslash;
+									continue;
+								}
 
 							} catch (...) {
-                                throw InvalidEscapeSequence(Context(input));
+								throw InvalidEscapeSequence(Context(reader));
 							}
 							break;
 						default:
-							throw InvalidEscapeSequence(Context(input));
+							throw InvalidEscapeSequence(Context(reader));
 						}
 					}
 					string.push_back(ch);
 				}
 
-				tokens_.emplace_back(Token::String, string, Context(input));
+				tokens_.emplace_back(Token::String, string, Context(reader));
 			} else if (ch == '\0') {
-                break;
+				break;
 			} else {
-				throw TokenizationError(Context(input));
+				throw TokenizationError(Context(reader));
 			}
 		}
 	}

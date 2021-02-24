@@ -3,6 +3,7 @@
 #define STATEMENT_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 class Expression;
@@ -14,13 +15,13 @@ public:
 
 class DeleteStatement : public Statement {
 public:
-    std::unique_ptr<Expression>              expression;
-    std::vector<std::unique_ptr<Expression>> index;
+	std::unique_ptr<Expression> expression;
+	std::vector<std::unique_ptr<Expression>> index;
 };
 
 class FunctionStatement : public Statement {
 public:
-	std::string                             name;
+	std::string name;
 	std::vector<std::unique_ptr<Statement>> statements;
 };
 
@@ -31,24 +32,24 @@ public:
 
 class CondStatement : public Statement {
 public:
-    std::unique_ptr<Expression> cond;
-    std::unique_ptr<Statement>  body;
-	std::unique_ptr<Statement>  else_;
+	std::unique_ptr<Expression> cond;
+	std::unique_ptr<Statement> body;
+	std::unique_ptr<Statement> else_;
 };
 
 class LoopStatement : public Statement {
 public:
-    std::vector<std::unique_ptr<Expression>> init;
-    std::unique_ptr<Expression>              cond;
-    std::vector<std::unique_ptr<Expression>> incr;
-    std::unique_ptr<Statement>               body;
+	std::vector<std::unique_ptr<Expression>> init;
+	std::unique_ptr<Expression> cond;
+	std::vector<std::unique_ptr<Expression>> incr;
+	std::unique_ptr<Statement> body;
 };
 
 class ForEachStatement : public Statement {
 public:
 	std::unique_ptr<Expression> iterator;
 	std::unique_ptr<Expression> container;
-    std::unique_ptr<Statement>  body;
+	std::unique_ptr<Statement> body;
 };
 
 class BreakStatement : public Statement {};
