@@ -66,7 +66,7 @@ public:
 	optional<std::string> match(const std::regex &regex);
 
 	template <class Pred>
-	optional<std::string> match_if(Pred pred) {
+	optional<std::string> match_while(Pred pred) {
 		std::string m;
 		while (!eof()) {
 			const char ch = peek();
