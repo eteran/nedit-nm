@@ -10,8 +10,8 @@
 
 namespace {
 
-const std::regex integer_regex(R"(^(0|[1-9][0-9]*))");
-const std::regex identifier_regex(R"(^[_a-zA-Z$][_a-zA-Z0-9]*)");
+const std::regex integer_regex(R"((0|[1-9][0-9]*))");
+const std::regex identifier_regex(R"([_a-zA-Z$][_a-zA-Z0-9]*)");
 const std::string whitespace(" \f\r\t\b");
 
 /**
@@ -44,7 +44,7 @@ Tokenizer::Tokenizer(const std::string &filename) {
 
 	Reader reader(source);
 
-	while (!reader.eof()) {
+	while (true) {
 
 		// consume whitespace and comments until the next token
 		while (true) {
@@ -56,6 +56,10 @@ Tokenizer::Tokenizer(const std::string &filename) {
 			} else {
 				break;
 			}
+		}
+		
+		if(reader.eof()) {
+			break;
 		}
 
 		// NOTE(eteran): these should be ordered by length so that shorter tokens
@@ -135,7 +139,7 @@ Tokenizer::Tokenizer(const std::string &filename) {
 			char ch = reader.peek();
 			if (isdigit(ch)) {
 
-				Reader::optional<std::string> number = reader.match(integer_regex);
+				auto number = reader.match(integer_regex);
 				if (!number) {
 					throw InvalidNumericConstant(Context(reader));
 				}
@@ -152,7 +156,7 @@ Tokenizer::Tokenizer(const std::string &filename) {
 				tokens_.emplace_back(Token::Integer, *number, Context(reader));
 			} else if (isalpha(ch) || ch == '_' || ch == '$') {
 
-				Reader::optional<std::string> identifier = reader.match(identifier_regex);
+				auto identifier = reader.match(identifier_regex);
 				if (!identifier) {
 					throw InvalidIdentifier(Context(reader));
 				}
@@ -290,8 +294,6 @@ Tokenizer::Tokenizer(const std::string &filename) {
 				}
 
 				tokens_.emplace_back(Token::String, string, Context(reader));
-			} else if (ch == '\0') {
-				break;
 			} else {
 				throw TokenizationError(Context(reader));
 			}
