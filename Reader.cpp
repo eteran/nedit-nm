@@ -164,7 +164,7 @@ Reader::Location Reader::location(size_t index) const noexcept {
 
 	if (index < input_.size()) {
 
-		for (int i = 0; i < index; ++i) {
+		for (size_t i = 0; i < index; ++i) {
 			if (input_[i] == '\n') {
 				++line;
 				col = 1;
