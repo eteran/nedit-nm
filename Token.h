@@ -2,7 +2,6 @@
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
-#include "Context.h"
 #include <string>
 
 class Token {
@@ -69,13 +68,13 @@ public:
 public:
 	Token() = default;
 
-	Token(Type t, const std::string &v, const Context &c)
-		: type(t), value(v), context(c) {
+	Token(Type t, const std::string &v, size_t n)
+		: type(t), value(v), index(n) {
 	}
 
 	Type type = Invalid;
 	std::string value;
-	Context context;
+	size_t index;
 };
 
 #endif

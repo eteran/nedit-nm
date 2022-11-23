@@ -2,10 +2,10 @@
 #include "CodeGenerator.h"
 #include "Expression.h"
 #include "Statement.h"
-#include <boost/variant.hpp>
 #include <climits>
 #include <list>
 #include <stack>
+#include <variant>
 
 namespace {
 
@@ -17,7 +17,7 @@ struct Node {
 struct BranchNode {
 	int64_t location;
 	std::string instr;
-	int64_t target = LONG_LONG_MAX; // default to blatently invalid
+	int64_t target = LONG_LONG_MAX; // default to blatantly invalid
 };
 
 struct AssignNode {
@@ -58,7 +58,7 @@ struct CallNode {
 	size_t args;
 };
 
-using node_type = boost::variant<Node, BranchNode, AssignNode, PushSymbolNode, PushStringNode, PushArraySymbolNode, ArrayOpNode, CallNode>;
+using node_type = std::variant<Node, BranchNode, AssignNode, PushSymbolNode, PushStringNode, PushArraySymbolNode, ArrayOpNode, CallNode>;
 
 struct Visitor {
 	void operator()(const Node &node) const {
@@ -173,7 +173,7 @@ template <class T, class... Args>
 T *emit_node(Args... args) {
 	int64_t index = current_location();
 	nodes.emplace_back(T{index, std::forward<Args>(args)...});
-	return &boost::get<T>(nodes.back());
+	return &std::get<T>(nodes.back());
 }
 
 /**
@@ -600,6 +600,6 @@ void CodeGenerator::generate(const std::vector<std::unique_ptr<Statement>> &stat
  */
 void CodeGenerator::print_ir() {
 	for (const node_type &node : nodes) {
-		boost::apply_visitor(Visitor{}, node);
+		std::visit(Visitor{}, node);
 	}
 }

@@ -45,12 +45,10 @@ public:
 	}
 
 public:
-	size_t line() const {
-		return token_.context.line();
+	size_t index() const {
+		return token_.index;
 	}
-	size_t column() const {
-		return token_.context.column();
-	}
+
 	const Token &token() const {
 		return token_;
 	}
@@ -277,8 +275,8 @@ public:
 
 class TokenizationError : public Error {
 public:
-	explicit TokenizationError(const Context &context)
-		: context_(context) {
+	explicit TokenizationError(size_t index)
+		: index_(index) {
 	}
 
 public:
@@ -287,18 +285,18 @@ public:
 	}
 
 public:
-	const Context &context() const {
-		return context_;
+	size_t index() const {
+		return index_;
 	}
 
 private:
-	Context context_;
+	size_t index_;
 };
 
 class InvalidIdentifier : public TokenizationError {
 public:
-	explicit InvalidIdentifier(const Context &context)
-		: TokenizationError(context) {
+	explicit InvalidIdentifier(size_t index)
+		: TokenizationError(index) {
 	}
 
 public:
@@ -309,8 +307,8 @@ public:
 
 class InvalidNumericConstant : public TokenizationError {
 public:
-	explicit InvalidNumericConstant(const Context &context)
-		: TokenizationError(context) {
+	explicit InvalidNumericConstant(size_t index)
+		: TokenizationError(index) {
 	}
 
 public:
@@ -321,8 +319,8 @@ public:
 
 class InvalidEscapeSequence : public TokenizationError {
 public:
-	explicit InvalidEscapeSequence(const Context &context)
-		: TokenizationError(context) {
+	explicit InvalidEscapeSequence(size_t index)
+		: TokenizationError(index) {
 	}
 
 public:

@@ -3,10 +3,10 @@
 #include "Error.h"
 #include "Optimizer.h"
 #include "Parser.h"
-#include <boost/variant.hpp>
 #include <iostream>
 #include <list>
 #include <stack>
+#include <variant>
 #include <vector>
 
 /**
@@ -44,14 +44,12 @@ int main(int argc, char *argv[]) {
 
 	} catch (const SyntaxError &ex) {
 		std::cerr << ex.what() << std::endl;
-		std::cerr << "On line:   " << ex.line() << std::endl;
-		std::cerr << "In Column: " << ex.column() << std::endl;
+		std::cerr << "At Index:  " << ex.index() << std::endl;
 		std::cerr << "Token:     " << ex.token().value << std::endl;
 		return -1;
 	} catch (const TokenizationError &ex) {
 		std::cerr << ex.what() << std::endl;
-		std::cerr << "On line:   " << ex.context().line() << std::endl;
-		std::cerr << "In Column: " << ex.context().column() << std::endl;
+		std::cerr << "At Index:  " << ex.index() << std::endl;
 		return -1;
 	} catch (const FileNotFound &ex) {
 		std::cerr << ex.what() << std::endl;

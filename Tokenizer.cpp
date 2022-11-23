@@ -57,8 +57,8 @@ Tokenizer::Tokenizer(const std::string &filename) {
 				break;
 			}
 		}
-		
-		if(reader.eof()) {
+
+		if (reader.eof()) {
 			break;
 		}
 
@@ -67,73 +67,73 @@ Tokenizer::Tokenizer(const std::string &filename) {
 		if (reader.match("\\\n")) {
 			continue;
 		} else if (reader.match("++")) {
-			tokens_.emplace_back(Token::Increment, "++", Context(reader));
+			tokens_.emplace_back(Token::Increment, "++", reader.index());
 		} else if (reader.match("--")) {
-			tokens_.emplace_back(Token::Decrement, "--", Context(reader));
+			tokens_.emplace_back(Token::Decrement, "--", reader.index());
 		} else if (reader.match("<=")) {
-			tokens_.emplace_back(Token::LessThanOrEqual, "<=", Context(reader));
+			tokens_.emplace_back(Token::LessThanOrEqual, "<=", reader.index());
 		} else if (reader.match(">=")) {
-			tokens_.emplace_back(Token::GreaterThanOrEqual, ">=", Context(reader));
+			tokens_.emplace_back(Token::GreaterThanOrEqual, ">=", reader.index());
 		} else if (reader.match("==")) {
-			tokens_.emplace_back(Token::Equal, "==", Context(reader));
+			tokens_.emplace_back(Token::Equal, "==", reader.index());
 		} else if (reader.match("!=")) {
-			tokens_.emplace_back(Token::NotEqual, "!=", Context(reader));
+			tokens_.emplace_back(Token::NotEqual, "!=", reader.index());
 		} else if (reader.match("+=")) {
-			tokens_.emplace_back(Token::AddAssign, "+=", Context(reader));
+			tokens_.emplace_back(Token::AddAssign, "+=", reader.index());
 		} else if (reader.match("-=")) {
-			tokens_.emplace_back(Token::SubAssign, "-=", Context(reader));
+			tokens_.emplace_back(Token::SubAssign, "-=", reader.index());
 		} else if (reader.match("*=")) {
-			tokens_.emplace_back(Token::MulAssign, "*=", Context(reader));
+			tokens_.emplace_back(Token::MulAssign, "*=", reader.index());
 		} else if (reader.match("/=")) {
-			tokens_.emplace_back(Token::DivAssign, "/=", Context(reader));
+			tokens_.emplace_back(Token::DivAssign, "/=", reader.index());
 		} else if (reader.match("%=")) {
-			tokens_.emplace_back(Token::ModAssign, "%=", Context(reader));
+			tokens_.emplace_back(Token::ModAssign, "%=", reader.index());
 		} else if (reader.match("&&")) {
-			tokens_.emplace_back(Token::LogicalAnd, "&&", Context(reader));
+			tokens_.emplace_back(Token::LogicalAnd, "&&", reader.index());
 		} else if (reader.match("||")) {
-			tokens_.emplace_back(Token::LogicalOr, "||", Context(reader));
+			tokens_.emplace_back(Token::LogicalOr, "||", reader.index());
 		} else if (reader.match('{')) {
-			tokens_.emplace_back(Token::LeftBrace, "{", Context(reader));
+			tokens_.emplace_back(Token::LeftBrace, "{", reader.index());
 		} else if (reader.match('}')) {
-			tokens_.emplace_back(Token::RightBrace, "}", Context(reader));
+			tokens_.emplace_back(Token::RightBrace, "}", reader.index());
 		} else if (reader.match(')')) {
-			tokens_.emplace_back(Token::RightParen, ")", Context(reader));
+			tokens_.emplace_back(Token::RightParen, ")", reader.index());
 		} else if (reader.match('(')) {
-			tokens_.emplace_back(Token::LeftParen, "(", Context(reader));
+			tokens_.emplace_back(Token::LeftParen, "(", reader.index());
 		} else if (reader.match(']')) {
-			tokens_.emplace_back(Token::RightBracket, "]", Context(reader));
+			tokens_.emplace_back(Token::RightBracket, "]", reader.index());
 		} else if (reader.match('[')) {
-			tokens_.emplace_back(Token::LeftBracket, "[", Context(reader));
+			tokens_.emplace_back(Token::LeftBracket, "[", reader.index());
 		} else if (reader.match(';')) {
-			tokens_.emplace_back(Token::Semicolon, ";", Context(reader));
+			tokens_.emplace_back(Token::Semicolon, ";", reader.index());
 		} else if (reader.match(',')) {
-			tokens_.emplace_back(Token::Comma, ",", Context(reader));
+			tokens_.emplace_back(Token::Comma, ",", reader.index());
 		} else if (reader.match('\n')) {
-			tokens_.emplace_back(Token::Newline, "\n", Context(reader));
+			tokens_.emplace_back(Token::Newline, "\n", reader.index());
 		} else if (reader.match('<')) {
-			tokens_.emplace_back(Token::LessThan, "<", Context(reader));
+			tokens_.emplace_back(Token::LessThan, "<", reader.index());
 		} else if (reader.match('>')) {
-			tokens_.emplace_back(Token::GreaterThan, ">", Context(reader));
+			tokens_.emplace_back(Token::GreaterThan, ">", reader.index());
 		} else if (reader.match('&')) {
-			tokens_.emplace_back(Token::BinaryAnd, "&", Context(reader));
+			tokens_.emplace_back(Token::BinaryAnd, "&", reader.index());
 		} else if (reader.match('|')) {
-			tokens_.emplace_back(Token::BinaryOr, "|", Context(reader));
+			tokens_.emplace_back(Token::BinaryOr, "|", reader.index());
 		} else if (reader.match('!')) {
-			tokens_.emplace_back(Token::Not, "!", Context(reader));
+			tokens_.emplace_back(Token::Not, "!", reader.index());
 		} else if (reader.match('=')) {
-			tokens_.emplace_back(Token::Assign, "=", Context(reader));
+			tokens_.emplace_back(Token::Assign, "=", reader.index());
 		} else if (reader.match('+')) {
-			tokens_.emplace_back(Token::Add, "+", Context(reader));
+			tokens_.emplace_back(Token::Add, "+", reader.index());
 		} else if (reader.match('-')) {
-			tokens_.emplace_back(Token::Sub, "-", Context(reader));
+			tokens_.emplace_back(Token::Sub, "-", reader.index());
 		} else if (reader.match('*')) {
-			tokens_.emplace_back(Token::Mul, "*", Context(reader));
+			tokens_.emplace_back(Token::Mul, "*", reader.index());
 		} else if (reader.match('/')) {
-			tokens_.emplace_back(Token::Div, "/", Context(reader));
+			tokens_.emplace_back(Token::Div, "/", reader.index());
 		} else if (reader.match('%')) {
-			tokens_.emplace_back(Token::Mod, "%", Context(reader));
+			tokens_.emplace_back(Token::Mod, "%", reader.index());
 		} else if (reader.match('^')) {
-			tokens_.emplace_back(Token::Exponent, "^", Context(reader));
+			tokens_.emplace_back(Token::Exponent, "^", reader.index());
 		} else {
 			// identifiers/keywords
 			char ch = reader.peek();
@@ -141,7 +141,7 @@ Tokenizer::Tokenizer(const std::string &filename) {
 
 				auto number = reader.match(integer_regex);
 				if (!number) {
-					throw InvalidNumericConstant(Context(reader));
+					throw InvalidNumericConstant(reader.index());
 				}
 
 				// make sure that this is a valid integer that won't overflow
@@ -150,41 +150,41 @@ Tokenizer::Tokenizer(const std::string &filename) {
 					(void)std::stoi(*number, nullptr, 10);
 				} catch (const std::out_of_range &ex) {
 					(void)ex;
-					throw InvalidNumericConstant(Context(reader));
+					throw InvalidNumericConstant(reader.index());
 				}
 
-				tokens_.emplace_back(Token::Integer, *number, Context(reader));
+				tokens_.emplace_back(Token::Integer, *number, reader.index());
 			} else if (isalpha(ch) || ch == '_' || ch == '$') {
 
 				auto identifier = reader.match(identifier_regex);
 				if (!identifier) {
-					throw InvalidIdentifier(Context(reader));
+					throw InvalidIdentifier(reader.index());
 				}
 
 				if (*identifier == "while") {
-					tokens_.emplace_back(Token::While, *identifier, Context(reader));
+					tokens_.emplace_back(Token::While, *identifier, reader.index());
 				} else if (*identifier == "define") {
-					tokens_.emplace_back(Token::Define, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Define, *identifier, reader.index());
 				} else if (*identifier == "in") {
-					tokens_.emplace_back(Token::In, *identifier, Context(reader));
+					tokens_.emplace_back(Token::In, *identifier, reader.index());
 				} else if (*identifier == "for") {
-					tokens_.emplace_back(Token::For, *identifier, Context(reader));
+					tokens_.emplace_back(Token::For, *identifier, reader.index());
 				} else if (*identifier == "delete") {
-					tokens_.emplace_back(Token::Delete, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Delete, *identifier, reader.index());
 				} else if (*identifier == "if") {
-					tokens_.emplace_back(Token::If, *identifier, Context(reader));
+					tokens_.emplace_back(Token::If, *identifier, reader.index());
 				} else if (*identifier == "else") {
-					tokens_.emplace_back(Token::Else, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Else, *identifier, reader.index());
 				} else if (*identifier == "switch") {
-					tokens_.emplace_back(Token::Switch, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Switch, *identifier, reader.index());
 				} else if (*identifier == "break") {
-					tokens_.emplace_back(Token::Break, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Break, *identifier, reader.index());
 				} else if (*identifier == "continue") {
-					tokens_.emplace_back(Token::Continue, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Continue, *identifier, reader.index());
 				} else if (*identifier == "return") {
-					tokens_.emplace_back(Token::Return, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Return, *identifier, reader.index());
 				} else {
-					tokens_.emplace_back(Token::Identifier, *identifier, Context(reader));
+					tokens_.emplace_back(Token::Identifier, *identifier, reader.index());
 				}
 			} else if (ch == '"') {
 				std::string string;
@@ -254,7 +254,7 @@ Tokenizer::Tokenizer(const std::string &filename) {
 								}
 
 							} catch (...) {
-								throw InvalidEscapeSequence(Context(reader));
+								throw InvalidEscapeSequence(reader.index());
 							}
 							break;
 						case '0':
@@ -283,19 +283,19 @@ Tokenizer::Tokenizer(const std::string &filename) {
 								}
 
 							} catch (...) {
-								throw InvalidEscapeSequence(Context(reader));
+								throw InvalidEscapeSequence(reader.index());
 							}
 							break;
 						default:
-							throw InvalidEscapeSequence(Context(reader));
+							throw InvalidEscapeSequence(reader.index());
 						}
 					}
 					string.push_back(ch);
 				}
 
-				tokens_.emplace_back(Token::String, string, Context(reader));
+				tokens_.emplace_back(Token::String, string, reader.index());
 			} else {
-				throw TokenizationError(Context(reader));
+				throw TokenizationError(reader.index());
 			}
 		}
 	}
