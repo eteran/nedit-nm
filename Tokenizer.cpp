@@ -12,7 +12,7 @@ namespace {
 
 const std::regex integer_regex(R"((0|[1-9][0-9]*))");
 const std::regex identifier_regex(R"([_a-zA-Z$][_a-zA-Z0-9]*)");
-const std::string whitespace(" \f\r\t\b");
+const std::regex whitespace_regex(R"([ \f\r\t\b]+|#.+)");
 
 /**
  * @brief isodigit
@@ -48,12 +48,7 @@ Tokenizer::Tokenizer(const std::string &filename) {
 
 		// consume whitespace and comments until the next token
 		while (true) {
-			reader.consume(whitespace);
-			if (reader.match('#')) {
-				while (reader.peek() != '\n') {
-					reader.read();
-				}
-			} else {
+			if (!reader.match(whitespace_regex)) {
 				break;
 			}
 		}
